@@ -11,6 +11,11 @@ So serveral things should be taken into account.
 - **Fast**, Recognition speed should be in real time
 - **Low power**, which is critical for modern mobile phones.
 
+## News
+
+- 2018-05-22 Add net inference
+- 2018-04-22 Add fst and corresponding tools
+- 2018-04-10 Add varint support
 
 ## Solutions
 
