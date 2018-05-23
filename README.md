@@ -13,6 +13,7 @@ So serveral things should be taken into account.
 
 ## News
 
+- 2018-05-23 Add fft, fbank, feature pipeline
 - 2018-05-22 Add net inference
 - 2018-04-22 Add fst and corresponding tools
 - 2018-04-10 Add varint support
