@@ -15,10 +15,9 @@
 
 #include "fft.h"
 
-int main()
-{
+int main() {
   int n = 8;
-  float x[8] = {1,2,3,4,5,6,0,0};
+  float x[8] = {1, 2, 3, 4, 5, 6, 0, 0};
   float y[8] = {0};
 
   xdecoder::fft(x, y, n);

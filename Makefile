@@ -6,7 +6,8 @@ CXXFLAGS = -g -std=c++11 -MMD -Wall -I src -I . -D USE_VARINT -D USE_BLAS -lopen
 OBJ = src/fst.o src/utils.o src/net.o \
       src/fft.o src/feature-pipeline.o
 
-TEST = test/varint-test test/fft-test
+TEST = test/varint-test test/fft-test \
+       test/hash-list-test
 
 TOOL = tools/fst-init tools/fst-info tools/fst-to-dot \
        tools/transition-id-to-pdf \
