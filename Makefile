@@ -11,7 +11,8 @@ TEST = test/varint-test test/fft-test \
 
 TOOL = tools/fst-init tools/fst-info tools/fst-to-dot \
        tools/transition-id-to-pdf \
-       tools/net-quantization
+       tools/net-quantization \
+       tools/xdecode
 
 all: $(TEST) $(TOOL) $(OBJ)
 
