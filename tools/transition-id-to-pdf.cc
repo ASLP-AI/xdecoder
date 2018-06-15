@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
   Tree tree;
   tree.ReadTransitionIdToPdfTextFile(argv[1]);
-  tree.WriteTransitionToPdf(argv[2]);
+  tree.Write(argv[2]);
   return 0;
 }
 

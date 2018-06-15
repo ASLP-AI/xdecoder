@@ -57,7 +57,7 @@ class Tree {
     fclose(fp);
   }
 
-  void ReadTransitionIdToPdf(const std::string& filename) {
+  void Read(const std::string& filename) {
     std::ifstream is(filename, std::ifstream::binary);
     if (is.fail()) {
       ERROR("read file %s error, check!!!", filename.c_str());
@@ -70,7 +70,7 @@ class Tree {
     }
   }
 
-  void WriteTransitionToPdf(const std::string& filename) const {
+  void Write(const std::string& filename) const {
     std::ofstream os(filename, std::ofstream::binary);
     if (os.fail()) {
       ERROR("write file %s error, check!!!", filename.c_str());
