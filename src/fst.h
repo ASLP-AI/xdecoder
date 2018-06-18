@@ -83,6 +83,14 @@ class Fst {
     return (finals_.find(id) != finals_.end());
   }
 
+  float Final(int32_t id) const {
+    if (IsFinal(id)) {
+      return finals_.at(id);
+    } else {
+      return 0.0f;
+    }
+  }
+
   int32_t NumArcs(int32_t id) const {
     if (id < NumStates() - 1) {
       return arc_offset_[id + 1] - arc_offset_[id];

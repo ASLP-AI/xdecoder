@@ -31,6 +31,7 @@
 #include "tree.h"
 #include "hash-list.h"
 #include "fst.h"
+#include "decodable.h"
 
 namespace xdecoder {
 
@@ -57,7 +58,7 @@ class FasterDecoder {
 
   ~FasterDecoder() { ClearToks(toks_.Clear()); }
 
-  void Decode(Tree *decodable);
+  void Decode(Decodable *decodable);
 
   /// Returns true if a final state was active on the last frame.
   bool ReachedFinal();
@@ -66,7 +67,7 @@ class FasterDecoder {
   /// AND we reached a final state, it limits itself to final states;
   /// otherwise it gets the most likely token not taking into account
   /// final-probs. Returns true if the output best path was not the empty
-  bool GetBestPath(std::vector<int32_t> *words,
+  bool GetBestPath(std::vector<int32_t> *results,
                    bool use_final_probs = true);
 
   /// As a new alternative to Decode(), you can call InitDecoding
@@ -77,7 +78,7 @@ class FasterDecoder {
   /// This will decode until there are no more frames ready in the decodable
   /// object, but if max_num_frames is >= 0 it will decode no more than
   /// that many frames.
-  void AdvanceDecoding(Tree *decodable,
+  void AdvanceDecoding(Decodable *decodable,
                        int32_t max_num_frames = -1);
 
   /// Returns the number of frames already decoded.
@@ -139,7 +140,7 @@ class FasterDecoder {
   // ProcessEmitting returns the likelihood cutoff used.
   // It decodes the frame num_frames_decoded_ of the decodable object
   // and then increments num_frames_decoded_
-  double ProcessEmitting(Tree *decodable);
+  double ProcessEmitting(Decodable *decodable);
 
   // TODO(Binbin Zhang) first time we go through this,
   // could avoid using the queue.

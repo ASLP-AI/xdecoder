@@ -20,7 +20,7 @@
 
 namespace xdecoder {
 
-class DecodableInterface {
+class Decodable {
  public:
   /// Returns the log likelihood, which will be negated in the decoder.
   /// The "frame" starts from zero.  You should verify that IsLastFrame(frame-1)
@@ -56,7 +56,7 @@ class DecodableInterface {
   /// this is for compatibility with OpenFst.
   virtual int32_t NumIndices() const = 0;
 
-  virtual ~DecodableInterface() {}
+  virtual ~Decodable() {}
 };
 
 }  // namespace xdecoder

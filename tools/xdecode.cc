@@ -23,6 +23,7 @@
 
 int main(int argc, char* argv[]) {
   using xdecoder::ParseOptions;
+  using xdecoder::FasterDecoder;
   const char *usage = "\n";
   ParseOptions option(usage);
   float beam = 16.0;
@@ -53,6 +54,8 @@ int main(int argc, char* argv[]) {
     option.PrintUsage();
     exit(1);
   }
+
+  //  FasterDecoder decoder;
 
   return 0;
 }
