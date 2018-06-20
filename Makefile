@@ -8,7 +8,8 @@ OBJ = src/fst.o src/utils.o src/net.o \
       src/decodable.o src/faster-decoder.o
 
 TEST = test/varint-test test/fft-test \
-       test/hash-list-test
+       test/hash-list-test \
+       test/wav-test
 
 TOOL = tools/fst-init tools/fst-info tools/fst-to-dot \
        tools/transition-id-to-pdf \
