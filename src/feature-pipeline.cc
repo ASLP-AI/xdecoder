@@ -51,7 +51,7 @@ void FeaturePipeline::AcceptRawWav(const std::vector<float>& wav) {
   CHECK(raw_feat_dim_ == cmvn_.NumCols());
   for (int i = 0; i < num_frames; i++) {
     for (int j = 0; j < raw_feat_dim_; j++) {
-      CHECK(i * raw_feat_dim_ + j < feat.size());
+      CHECK(i * raw_feat_dim_ + j < static_cast<int>(feat.size()));
       feat[i*raw_feat_dim_+j] =
           (feat[i*raw_feat_dim_+j] - cmvn_(0, j)) * cmvn_(1, j);
       // printf("%f ", feat[i*raw_feat_dim+j]);
@@ -107,6 +107,18 @@ int FeaturePipeline::ReadFeature(int t, std::vector<float>* feat) {
            sizeof(float) * feat_dim);
   }
   return total_frame;
+}
+
+int FeaturePipeline::ReadOneFrame(int t, float *data) {
+  CHECK(data != NULL);
+  CHECK(t < num_frames_);
+  int num_frames_ready = NumFramesReady();
+  if (num_frames_ready <= 0) return 0;
+  CHECK(t <= num_frames_ready);
+  int feat_dim = (left_context_ + 1 + right_context_) * raw_feat_dim_;
+  memcpy(data, feature_buf_.data() + t * raw_feat_dim_,
+         sizeof(float) * feat_dim);
+  return 1;
 }
 
 int FeaturePipeline::ReadAllFeature(std::vector<float> *feat) {

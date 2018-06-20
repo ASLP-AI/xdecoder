@@ -14,6 +14,9 @@
 // limitations under the License.
 
 #include "utils.h"
+#include "net.h"
+#include "tree.h"
+#include "feature-pipeline.h"
 
 #ifndef DECODABLE_H_
 #define DECODABLE_H_
@@ -51,12 +54,61 @@ class Decodable {
       return -1;
   }
 
-  /// Returns the number of states in the acoustic model
-  /// (they will be indexed one-based, i.e. from 1 to NumIndices();
-  /// this is for compatibility with OpenFst.
-  virtual int32_t NumIndices() const = 0;
-
   virtual ~Decodable() {}
+};
+
+struct DecodableOptions {
+  float acoustic_scale;
+  int skip;
+  int32_t max_batch_size;
+
+  DecodableOptions(): acoustic_scale(0.1), skip(0), max_batch_size(8) {}
+};
+
+class OnlineDecodable : public Decodable {
+ public:
+  OnlineDecodable(const Tree& tree,
+                  const Vector<float>& pdf_prior,
+                  const DecodableOptions& options,
+                  Net *net,
+                  FeaturePipeline *feature_pipeline):
+      tree_(tree),
+      pdf_prior_(pdf_prior),
+      options_(options),
+      net_(net),
+      feature_pipeline_(feature_pipeline),
+      begin_frame_(0) {
+    // Last softmax is unneccesary for decoding, and we can make the decoding
+    // more fast by drop the last softmax. So we don't allow softmax in AM net,
+    // and we don't deal with that case in decoding. please remove the last
+    // softmax layer by using
+    // python tools/convert_kaldi_nnet1_model.py --remove-last-softmax
+    CHECK(!net_->IsLastLayerSoftmax() &&
+          "Last softmax is unneccesary for decoding, please remove it");
+  }
+
+  virtual bool IsLastFrame(int32_t frame) const {
+    return feature_pipeline_->IsLastFrame(frame);
+  }
+
+  virtual int32_t NumFramesReady() const {
+    return feature_pipeline_->NumFramesReady();
+  }
+
+  virtual float LogLikelihood(int32_t frame, int32_t index);
+
+ private:
+  void ComputeForFrame(int32_t frame);
+
+ private:
+  const Tree& tree_;
+  const Vector<float>& pdf_prior_;
+  const DecodableOptions& options_;
+  Net *net_;
+  FeaturePipeline *feature_pipeline_;
+
+  int32_t begin_frame_;
+  Matrix<float> scaled_loglikes_;
 };
 
 }  // namespace xdecoder

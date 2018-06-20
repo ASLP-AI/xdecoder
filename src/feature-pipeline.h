@@ -63,6 +63,7 @@ class FeaturePipeline {
   }
   int ReadFeature(int t, std::vector<float>* feat);
   int ReadAllFeature(std::vector<float>* feat);
+  int ReadOneFrame(int t, float *data);
   void Reset() {
     done_ = false;
     num_frames_ = 0;
@@ -70,6 +71,13 @@ class FeaturePipeline {
     ctx_wav_.clear();
   }
   int NumFrames(int size) const;
+  bool IsLastFrame(int frame) const {
+    if (done_ && (frame == num_frames_ - 1)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
  private:
   void ReadCmvn(const std::string& cmvn_file);

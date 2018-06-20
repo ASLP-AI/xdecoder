@@ -51,7 +51,9 @@ class Tensor {
   DType* Data() const { return data_; }
   std::vector<int32_t> Shape() const { return shape_; }
   virtual void CopyFrom(const Tensor<DType, Dim>& tensor);
+  virtual void Scale(float alpha);
 
+ protected:
   int32_t GetShapeSize(const std::vector<int32_t>& shape) const;
 
  protected:
@@ -93,7 +95,7 @@ class Matrix : public Tensor<DType, 2> {
   void Mul(const Matrix<DType>& mat1, const Matrix<DType>& mat2,
            bool transpose = false, float alpha = 0.0);
   void Transpose(const Matrix<DType> &mat);
-  void AddVec(const Vector<DType> &vec);
+  void AddVec(const Vector<DType> &vec, float alpha = 1.0f);
   Vector<DType> Row(int row) const;
   Matrix<DType> RowRange(int start, int length) const;
 };
@@ -121,7 +123,6 @@ class Vector: public Tensor<DType, 1> {
     return *(this->data_ + n);
   }
   void Add(const Vector<DType>& vec, float alpha = 1.0);
-  void Scale(float alpha);
 };
 
 
@@ -287,6 +288,11 @@ class Net {
 
   // For Quantization
   void Quantize(Net* quantize_net) const;
+  // For xdecoder
+  bool IsLastLayerSoftmax() const {
+    CHECK(layers_.size() > 0);
+    return layers_[layers_.size() - 1]->Type() == kSoftmax;
+  }
 
  protected:
   std::vector<Layer*> layers_;

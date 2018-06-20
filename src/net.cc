@@ -72,6 +72,13 @@ void Tensor<DType, Dim>::CopyFrom(const Tensor<DType, Dim>& tensor) {
   memcpy(data_, tensor.Data(), Size() * sizeof(DType));
 }
 
+template <class DType, int32_t Dim>
+void Tensor<DType, Dim>::Scale(float alpha) {
+  for (int i = 0; i < this->Size(); i++) {
+    *(data_ + i) = static_cast<DType>(*(data_ + i) * alpha);
+  }
+}
+
 template <typename DType>
 void Matrix<DType>::Mul(const Matrix<DType>& mat1,
                         const Matrix<DType>& mat2,
@@ -108,11 +115,11 @@ void Matrix<DType>::Mul(const Matrix<DType>& mat1,
 
 // cblas_sger
 template<typename DType>
-void Matrix<DType>::AddVec(const Vector<DType>& vec) {
+void Matrix<DType>::AddVec(const Vector<DType>& vec, float alpha) {
   CHECK(NumCols() == vec.Size());
   for (int i = 0; i < NumRows(); i++) {
     for (int j = 0; j < NumCols(); j++) {
-      (*this)(i, j) += vec(j);
+      (*this)(i, j) += alpha * vec(j);
     }
   }
 }
@@ -161,12 +168,6 @@ void Vector<DType>::Add(const Vector<DType>& vec, float alpha) {
   }
 }
 
-template <typename DType>
-void Vector<DType>::Scale(float alpha) {
-  for (int i = 0; i < this->Size(); i++) {
-    (*this)(i) *= alpha;
-  }
-}
 
 /* Quantization Functions */
 
@@ -256,7 +257,7 @@ std::string LayerTypeToString(LayerType type) {
     case kTanh: return "<Tanh>";
     case kSoftmax: return "<Softmax>";
     case kQuantizeFullyConnect: return "<QuantizeFullyConnect>";
-    defaut: return "<Unknown>";
+    default: return "<Unknown>";
   }
 }
 
