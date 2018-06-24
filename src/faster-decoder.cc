@@ -113,9 +113,10 @@ bool FasterDecoder::GetBestPath(std::vector<int32_t> *results,
 
   std::vector<int32_t> results_reverse;
   for (Token *tok = best_tok; tok != NULL; tok = tok->prev_) {
-    results_reverse.push_back(tok->arc_.olabel);
+    if (tok->arc_.olabel > 0)
+      results_reverse.push_back(tok->arc_.olabel);
   }
-  results_reverse.pop_back();  // that was a "fake" token... gives no info.
+  // results_reverse.pop_back();  // that was a "fake" token... gives no info.
 
   std::vector<int32_t>::iterator it =
       std::unique(results_reverse.begin(), results_reverse.end());

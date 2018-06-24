@@ -30,6 +30,9 @@ namespace xdecoder {
 class Tree {
  public:
   Tree() {}
+  explicit Tree(const std::string& filename) {
+    Read(filename);
+  }
   // Refer to the following link to genertate transition id to pdf file
   // https://github.com/ling0322/pocketkaldi/blob/master/tool/extract_id2pdf.cc
   void ReadTransitionIdToPdfTextFile(const std::string& filename) {

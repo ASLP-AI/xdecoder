@@ -54,6 +54,8 @@ class Decodable {
       return -1;
   }
 
+  virtual void Reset() = 0;
+
   virtual ~Decodable() {}
 };
 
@@ -96,6 +98,12 @@ class OnlineDecodable : public Decodable {
   }
 
   virtual float LogLikelihood(int32_t frame, int32_t index);
+
+  virtual void Reset() {
+    begin_frame_ = 0;
+    feature_pipeline_->Reset();
+    scaled_loglikes_.Resize(0, 0);
+  }
 
  private:
   void ComputeForFrame(int32_t frame);

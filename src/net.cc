@@ -32,14 +32,19 @@ void Tensor<DType, Dim>::Resize(const std::vector<int32_t>& shape) {
   CHECK(shape_.size() == Dim);
   CHECK(shape.size() == Dim);
   int32_t size = GetShapeSize(shape);
-  if (size == 0 || size == this->Size()) {
+  if (size == this->Size()) {
     shape_ = shape;
     return;
   }
   if (holder_ && data_ != nullptr) delete [] data_;
-  data_ = new DType[size]();
   shape_ = shape;
-  holder_ = true;
+  if (size != 0) {
+    data_ = new DType[size]();
+    holder_ = true;
+  } else {
+    data_ = nullptr;
+    holder_ = false;
+  }
 }
 
 template <class DType, int32_t Dim>

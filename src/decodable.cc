@@ -38,29 +38,29 @@ void OnlineDecodable::ComputeForFrame(int32_t frame) {
 
   int32_t input_frame_begin = frame;
   int32_t max_possible_input_frame_end = features_ready;
-  int32_t skip = options_.skip, batch_size = options_.max_batch_size;
+  int32_t shift = options_.skip + 1, batch_size = options_.max_batch_size;
   int32_t input_frame_end = std::min<int32_t>(max_possible_input_frame_end,
-                          input_frame_begin + batch_size * (skip + 1));
+                          input_frame_begin + batch_size * shift);
 
   CHECK(input_frame_end > input_frame_begin);
   int32_t feat_dim = feature_pipeline_->FeatureDim();
   int32_t num_frames_out = (input_frame_end - input_frame_begin);
-  int32_t num_frames_forward = (num_frames_out - 1) / (skip + 1) + 1;
+  int32_t num_frames_forward = (num_frames_out - 1) / shift + 1;
 
   CHECK(feat_dim == net_->InDim());
   Matrix<float> in(num_frames_forward, feat_dim),
                 out(num_frames_forward, net_->OutDim());
   for (int i = 0; i < num_frames_forward; i++) {
-    feature_pipeline_->ReadOneFrame(input_frame_begin + i * (skip + 1),
+    feature_pipeline_->ReadOneFrame(input_frame_begin + i * shift,
                                     in.Row(i).Data());
   }
   net_->Forward(in, &out);
   scaled_loglikes_.Resize(num_frames_out, net_->OutDim());
   for (int i = 0; i < num_frames_forward; i++) {
-    for (int j = 0; j < skip; j++) {
-      int32_t row = i * skip + j;
+    for (int j = 0; j < shift; j++) {
+      int32_t row = i * shift + j;
       if (row < scaled_loglikes_.NumRows())
-        scaled_loglikes_.Row(i * skip + j).CopyFrom(out.Row(i));
+        scaled_loglikes_.Row(row).CopyFrom(out.Row(i));
     }
   }
   // Here we suppose softmax is remove in the AM

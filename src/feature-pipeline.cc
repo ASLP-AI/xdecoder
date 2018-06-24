@@ -29,7 +29,6 @@ FeaturePipeline::FeaturePipeline(const FeaturePipelineConfig& config):
     num_frames_(0),
     done_(false) {
   ReadCmvn(config.cmvn_file);
-  config_.Info();
 }
 
 void FeaturePipeline::ReadCmvn(const std::string& cmvn_file) {

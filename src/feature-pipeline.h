@@ -38,7 +38,7 @@ struct FeaturePipelineConfig {
       sample_rate(16000),  // 16k sample rate
       frame_length(400),  // frame length 25ms,
       frame_shift(160),  // frame shift 16ms
-      left_context(10),
+      left_context(5),
       right_context(5) {
   }
 
