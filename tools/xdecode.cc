@@ -17,8 +17,9 @@
 
 #include <limits>
 
-#include "fst.h"
 #include "wav.h"
+#include "timer.h"
+#include "fst.h"
 #include "faster-decoder.h"
 #include "parse-option.h"
 
@@ -36,6 +37,7 @@ int main(int argc, char* argv[]) {
   using xdecoder::OnlineDecodable;
   using xdecoder::DecodableOptions;
   using xdecoder::WavReader;
+  using xdecoder::Timer;
 
   const char *usage = "\n";
   ParseOptions option(usage);
@@ -99,7 +101,8 @@ int main(int argc, char* argv[]) {
   if (!fp) {
     ERROR("%s not exint, please check!!!", wav_scp_file.c_str());
   }
-
+  
+  double total_wav_time = 0.0, total_decoding_time = 0.0;
   char buffer[1024] = {0}, key[1024] = {0}, path[1024] = {0};
   while (fgets(buffer, 1024, fp)) {
     int num = sscanf(buffer, "%s %s", key, path);
@@ -112,17 +115,27 @@ int main(int argc, char* argv[]) {
     CHECK(wav_reader.SampleRate() == 16000);
     std::vector<float> wav_data(wav_reader.Data(),
                                 wav_reader.Data() + wav_reader.NumSample());
+    double wav_time = static_cast<float>(wav_reader.NumSample()) / 
+                      wav_reader.SampleRate();
+    Timer timer;
     feature_pipeline.AcceptRawWav(wav_data);
     feature_pipeline.SetDone();
 
     std::vector<int32_t> result;
     decoder.Decode(&decodable);
     decoder.GetBestPath(&result);
+    double decode_time = timer.Elapsed();
 
     for (size_t i = 0; i < result.size(); i++) {
       std::cout << words_table.GetSymbol(result[i]) << " ";
     }
     std::cout << "\n";
+    std::cout << "wav time " << wav_time
+              << " decode time " << decode_time
+              << " rtf " << decode_time / wav_time
+              << "\n";
+    total_wav_time += wav_time;
+    total_decoding_time += decode_time;
 
     // Reset all
     feature_pipeline.Reset();
