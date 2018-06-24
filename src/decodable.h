@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
+
 #include "utils.h"
 #include "net.h"
 #include "tree.h"
@@ -103,6 +105,14 @@ class OnlineDecodable : public Decodable {
     begin_frame_ = 0;
     feature_pipeline_->Reset();
     scaled_loglikes_.Resize(0, 0);
+  }
+
+  void AcceptRawWav(const std::vector<float>& wav) {
+    feature_pipeline_->AcceptRawWav(wav);
+  }
+
+  void SetDone() {
+    feature_pipeline_->SetDone();
   }
 
  private:
