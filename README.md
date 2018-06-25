@@ -59,3 +59,9 @@ We can see more than half compression rate after we use varint since all of the 
 | transition id to pdf(before varint) | 18080 |
 | transition id to pdf(after varint)  | 8879  |
 
+### Decoder ###
+| Decoder                     | CER   |
+|-----------------------------|-------|
+| faster decoder              | 19.00 |
+| lattice faster decoder      | 16.33 |
+
