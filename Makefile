@@ -10,7 +10,7 @@ OBJ = src/fst.o src/utils.o src/net.o \
 TEST = test/varint-test test/fft-test \
        test/hash-list-test \
        test/wav-test \
-       test/thread-pool-test
+       test/thread-pool-test test/message-queue-test
 
 TOOL = tools/fst-init tools/fst-info tools/fst-to-dot \
        tools/transition-id-to-pdf \

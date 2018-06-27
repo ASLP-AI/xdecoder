@@ -11,8 +11,13 @@ So serveral things should be taken into account.
 - **Fast**, Recognition speed should be in real time
 - **Low power**, which is critical for modern mobile phones.
 
+I make my mind to make XDecoder to support ASR service as well, and ASR service
+is the first priority now.
+
 ## News
 
+- 2018-06-27 make decision to make XDecoder support ASR service, and ASR service will be the P0 priority
+- 2018-06-20 xdecode offline tool works
 - 2018-05-23 Add fft, fbank, feature pipeline
 - 2018-05-22 Add net inference
 - 2018-04-22 Add fst and corresponding tools
