@@ -5,7 +5,8 @@ CXXFLAGS = -g -std=c++11 -MMD -Wall -I src -I . -D USE_VARINT -D USE_BLAS -lopen
 #OBJ = $(patsubst %.cc,%.o,$(wildcard src/*.cc))
 OBJ = src/fst.o src/utils.o src/net.o \
       src/fft.o src/feature-pipeline.o \
-      src/decodable.o src/faster-decoder.o
+      src/decodable.o src/faster-decoder.o \
+      src/resource-manager.o
 
 TEST = test/varint-test test/fft-test \
        test/hash-list-test \
@@ -18,6 +19,11 @@ TOOL = tools/fst-init tools/fst-info tools/fst-to-dot \
        tools/xdecode
 
 all: $(TEST) $(TOOL) $(OBJ)
+
+.PHONY: server
+
+server:
+	make -C server
 
 test: $(TEST)
 	@for x in $(TEST); do \
@@ -45,6 +51,6 @@ tools/%: tools/%.cc $(OBJ)
 .PHONY: clean
 
 clean:
-	rm -rf $(OBJ); rm -rf $(TEST)
+	rm -rf $(OBJ); rm -rf $(TEST); rm -rf $(TOOL)
 
 -include */*.d
