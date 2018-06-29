@@ -42,8 +42,10 @@ class Tensor {
   virtual ~Tensor() {
     if (holder_ && data_ != nullptr) delete [] data_;
   }
-  void Read(std::istream& is);
-  void Write(std::ostream& os) const;
+  virtual void Read(const std::string& filename);
+  virtual void Read(std::istream& is);
+  virtual void Write(const std::string& filename) const;
+  virtual void Write(std::ostream& os) const;
   void Resize(const std::vector<int32_t>& shape);
   int32_t Size() const {
     return GetShapeSize(shape_);

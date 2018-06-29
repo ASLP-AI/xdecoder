@@ -22,6 +22,23 @@
 
 namespace xdecoder {
 
+class Recognizer {
+ public:
+  Recognizer();
+  ~Recognizer();
+
+  void add_wav(const std::vector<float>& wav_data);
+  std::string get_result();
+  void set_done();
+
+ public:
+  // Don't call this function from python code
+  void set_decode_task(void *decode_task);
+
+ private:
+  void *decode_task_;
+};
+
 class ResourceManager {
  public:
   ResourceManager();
@@ -36,16 +53,17 @@ class ResourceManager {
   void set_left_context(int left_context);
   void set_right_context(int right_context);
 
-  void set_cmvn(std::string cmvn);
-  void set_hclg(std::string hclg);
-  void set_tree(std::string tree);
-  void set_net(std::string net);
-  void set_pdf_prior(std::string pdf_prior);
-  void set_word(std::string word);
+  void set_cmvn(const std::string& cmvn);
+  void set_hclg(const std::string& hclg);
+  void set_tree(const std::string& tree);
+  void set_net(const std::string& net);
+  void set_pdf_prior(const std::string& pdf_prior);
+  void set_lexicon(const std::string& lexicon);
 
   void set_thread_pool_size(int size);
 
   void init();
+  void add_recognizer(Recognizer *recognizer);
 
  private:
   // FasterDecoderOptions
@@ -66,17 +84,21 @@ class ResourceManager {
   int thread_pool_size_;
 
   // Config files, all of them are paths
-  std::string cmvn_;
-  std::string hclg_;
-  std::string tree_;
-  std::string net_;
-  std::string pdf_prior_;
-  std::string word_;  // word list by int, refer to kaldi words.txt
+  std::string cmvn_file_;
+  std::string hclg_file_;
+  std::string tree_file_;
+  std::string net_file_;
+  std::string pdf_prior_file_;
+  std::string words_table_file_;  // word list by int, refer to kaldi words.txt
 
   void* faster_decoder_options_;
   void* decodable_options_;
   void* feature_options_;
   void* thread_pool_;
+  void* hclg_;
+  void* tree_;
+  void* pdf_prior_;
+  void* words_table_;
   std::vector<void *> resource_pool_;
 };
 

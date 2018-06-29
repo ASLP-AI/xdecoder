@@ -32,11 +32,7 @@ FeaturePipeline::FeaturePipeline(const FeaturePipelineConfig& config):
 }
 
 void FeaturePipeline::ReadCmvn(const std::string& cmvn_file) {
-  std::ifstream is(cmvn_file, std::ifstream::binary);
-  if (is.fail()) {
-    ERROR("read file %s error, check!!!", cmvn_file.c_str());
-  }
-  cmvn_.Read(is);
+  cmvn_.Read(cmvn_file);
   CHECK(cmvn_.NumCols() == raw_feat_dim_);
 }
 

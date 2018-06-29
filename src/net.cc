@@ -57,11 +57,29 @@ int32_t Tensor<DType, Dim>::GetShapeSize(
 }
 
 template <class DType, int32_t Dim>
+void Tensor<DType, Dim>::Read(const std::string& filename) {
+  std::ifstream is(filename, std::ifstream::binary);
+  if (is.fail()) {
+    ERROR("read file %s error, check!!!", filename.c_str());
+  }
+  Read(is);
+}
+
+template <class DType, int32_t Dim>
 void Tensor<DType, Dim>::Read(std::istream& is) {
   std::vector<int> shape(Dim, 0);
   is.read(reinterpret_cast<char *>(shape.data()), sizeof(int32_t) * Dim);
   Resize(shape);
   is.read(reinterpret_cast<char *>(data_), sizeof(DType) * Size());
+}
+
+template <class DType, int32_t Dim>
+void Tensor<DType, Dim>::Write(const std::string& filename) const {
+  std::ofstream os(filename, std::ofstream::binary);
+  if (os.fail()) {
+    ERROR("write file %s error, check!!!", filename.c_str());
+  }
+  Write(os);
 }
 
 template <class DType, int32_t Dim>

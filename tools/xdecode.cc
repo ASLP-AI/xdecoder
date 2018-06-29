@@ -84,13 +84,8 @@ int main(int argc, char* argv[]) {
   Tree tree(tree_file);
   Net net(net_file);
   Vector<float> pdf_prior;
-  {
-    std::ifstream is(pdf_prior_file, std::ifstream::binary);
-    if (is.fail()) {
-      ERROR("read file %s error, check!!!", pdf_prior_file.c_str());
-    }
-    pdf_prior.Read(is);
-  }
+  pdf_prior.Read(pdf_prior_file);
+
   SymbolTable words_table(word_file);
 
   FeaturePipeline feature_pipeline(feature_options);

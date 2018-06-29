@@ -27,9 +27,11 @@ void DecodeTask::operator() (void *resource) {
   OnlineDecodable decodable(tree_, pdf_prior_, decodable_options_,
                             net, &feature_pipeline);
   FasterDecoder decoder(hclg_, decoder_options_);
+  decoder.InitDecoding();
   bool done = false;
   while (!done) {
     std::vector<float> wav_data = audio_queue_.Get();
+    LOG("WAV LEN %d", static_cast<int>(wav_data.size()));
     if (wav_data.size() == 0) {
       // end of stream
       decodable.SetDone();

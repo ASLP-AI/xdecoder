@@ -45,7 +45,13 @@ class DecodeTask : public Threadable {
       pdf_prior_(pdf_prior),
       words_table_(words_table) {}
   // Here resource is a pointer to a Nnet ojbect
-  virtual void operator() (void *resource);
+  virtual void operator() (void* resource);
+  void AddWavData(const std::vector<float>& data) {
+    audio_queue_.Put(data);
+  }
+  std::string GetResult() {
+    return result_queue_.Get();
+  }
 
  private:
   const FasterDecoderOptions& decoder_options_;
