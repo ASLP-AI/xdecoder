@@ -41,12 +41,11 @@ while not done:
         pcm_data = xdecoder.FloatVector(len(package))
         for i in range(len(package)):
             pcm_data[i] = float(package[i])
-        print(len(pcm_data))
         recognizer.add_wav(pcm_data)
+        print('RESULT:', recognizer.get_result())
         time.sleep(0.5)
 
 wav_reader.close()
-
-while True:
-    pass
+recognizer.set_done()
+print('RESULT:', recognizer.get_result())
 

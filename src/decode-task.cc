@@ -31,7 +31,6 @@ void DecodeTask::operator() (void *resource) {
   bool done = false;
   while (!done) {
     std::vector<float> wav_data = audio_queue_.Get();
-    LOG("WAV LEN %d", static_cast<int>(wav_data.size()));
     if (wav_data.size() == 0) {
       // end of stream
       decodable.SetDone();
@@ -50,6 +49,7 @@ void DecodeTask::operator() (void *resource) {
     result_queue_.Put(ss.str());
     LOG("RESULT: %s", ss.str().c_str());
   }
+  LOG("Finish decoding");
 }
 
 }  // namespace xdecoder
