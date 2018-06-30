@@ -24,6 +24,8 @@
 
 namespace xdecoder {
 
+const int kMaxAudioBuffer = 10 * 60 * 16000;  // 10min buffer for VAD
+
 struct VadConfig {
   FeaturePipelineConfig feature_config;
   float silence_thresh;  // (0, 1)
@@ -48,7 +50,8 @@ class Vad {
  public:
   explicit Vad(const VadConfig& config);
   // return true is wave contains speech frame
-  bool DoVad(const std::vector<float>& wave, bool end_of_stream);
+  bool DoVad(const std::vector<float>& wave, bool end_of_stream,
+             std::vector<float>* speech = NULL);
   // internal state machine smooth
   bool Smooth(bool is_voice);
   void Reset();
@@ -66,6 +69,7 @@ class Vad {
   Net net_;
   bool endpoint_detected_;
   std::vector<bool> results_;
+  std::vector<float> audio_buffer_;
   int t_;
 };
 

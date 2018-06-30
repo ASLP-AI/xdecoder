@@ -33,6 +33,7 @@ Vad::Vad(const VadConfig& config):
     state_(kSilence),
     net_(config.net_file),
     endpoint_detected_(false), t_(0) {
+  audio_buffer_.reserve(kMaxAudioBuffer);
 }
 
 void Vad::Reset() {
@@ -44,28 +45,53 @@ void Vad::Reset() {
   results_.clear();
   feature_pipeline_.Reset();
   t_ = 0;
+  audio_buffer_.clear();
 }
 
-bool Vad::DoVad(const std::vector<float>& wave, bool end_of_stream) {
+bool Vad::DoVad(const std::vector<float>& wave, bool end_of_stream,
+                std::vector<float>* speech) {
+  if (audio_buffer_.size() + wave.size() >= kMaxAudioBuffer) {
+    Reset();
+  }
   feature_pipeline_.AcceptRawWav(wave);
   if (end_of_stream) feature_pipeline_.SetDone();
   std::vector<float> feat;
   int num_frames_ready = feature_pipeline_.ReadFeature(t_, &feat);
+  int num_frames = num_frames_ready - t_;
   int feat_dim = feature_pipeline_.FeatureDim();
-  Matrix<float> in(feat.data(), num_frames_ready, feat_dim), out;
+  Matrix<float> in(feat.data(), num_frames, feat_dim), out;
   net_.Forward(in, &out);
   assert(out.NumCols() == 2);
   endpoint_detected_ = false;
   bool contains_speech = false;
-  for (int i = 0; i < num_frames_ready; i++) {
-      bool is_speech = true;
-      if (out(i, 0) > config_.silence_thresh) is_speech = false;
-      // printf("%d %f\n", i, out(i, 0));
-      bool smooth_result = Smooth(is_speech);
-      results_.push_back(smooth_result);
-      if (smooth_result) contains_speech = true;
+  for (int i = 0; i < num_frames; i++) {
+    bool is_speech = true;
+    if (out(i, 0) > config_.silence_thresh) is_speech = false;
+    // printf("%d %f\n", i, out(i, 0));
+    bool smooth_result = Smooth(is_speech);
+    results_.push_back(smooth_result);
+    if (smooth_result) contains_speech = true;
   }
-  t_ += num_frames_ready;
+
+  audio_buffer_.insert(audio_buffer_.begin(), wave.begin(), wave.end());
+
+  if (speech != NULL) {
+    int speech_begin = t_, speech_end = num_frames_ready;
+    while (!results_[speech_begin] && speech_begin < speech_end)
+      speech_begin++;
+    while (!results_[speech_end] && speech_end > speech_begin)
+      speech_end--;
+    speech->clear();
+    if (speech_begin < speech_end) {
+      std::vector<float>::iterator begin = audio_buffer_.begin() +
+          config_.feature_config.frame_shift * speech_begin;
+      std::vector<float>::iterator end = audio_buffer_.begin() +
+          config_.feature_config.frame_shift * speech_end;
+      if (end_of_stream) end = audio_buffer_.end();
+      speech->insert(speech->begin(), begin, end);
+    }
+  }
+  t_ += num_frames;
   return contains_speech;
 }
 
