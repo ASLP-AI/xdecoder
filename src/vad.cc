@@ -53,30 +53,32 @@ bool Vad::DoVad(const std::vector<float>& wave, bool end_of_stream,
   if (audio_buffer_.size() + wave.size() >= kMaxAudioBuffer) {
     Reset();
   }
-  feature_pipeline_.AcceptRawWav(wave);
+  if (wave.size() > 0)
+    feature_pipeline_.AcceptRawWav(wave);
   if (end_of_stream) feature_pipeline_.SetDone();
   std::vector<float> feat;
-  int num_frames_ready = feature_pipeline_.ReadFeature(t_, &feat);
-  int num_frames = num_frames_ready - t_;
+  int num_frames = feature_pipeline_.ReadFeature(t_, &feat);
   int feat_dim = feature_pipeline_.FeatureDim();
-  Matrix<float> in(feat.data(), num_frames, feat_dim), out;
-  net_.Forward(in, &out);
-  assert(out.NumCols() == 2);
-  endpoint_detected_ = false;
-  bool contains_speech = false;
-  for (int i = 0; i < num_frames; i++) {
-    bool is_speech = true;
-    if (out(i, 0) > config_.silence_thresh) is_speech = false;
-    // printf("%d %f\n", i, out(i, 0));
-    bool smooth_result = Smooth(is_speech);
-    results_.push_back(smooth_result);
-    if (smooth_result) contains_speech = true;
+  if (num_frames > 0) {
+    Matrix<float> in(feat.data(), num_frames, feat_dim), out;
+    net_.Forward(in, &out);
+    assert(out.NumCols() == 2);
+    endpoint_detected_ = false;
+    bool contains_speech = false;
+    for (int i = 0; i < num_frames; i++) {
+      bool is_speech = true;
+      if (out(i, 0) > config_.silence_thresh) is_speech = false;
+      // printf("%d %f\n", i, out(i, 0));
+      bool smooth_result = Smooth(is_speech);
+      results_.push_back(smooth_result);
+      if (smooth_result) contains_speech = true;
+    }
   }
 
-  audio_buffer_.insert(audio_buffer_.begin(), wave.begin(), wave.end());
+  audio_buffer_.insert(audio_buffer_.end(), wave.begin(), wave.end());
 
   if (speech != NULL) {
-    int speech_begin = t_, speech_end = num_frames_ready;
+    int speech_begin = t_, speech_end = t_ + num_frames - 1;
     while (!results_[speech_begin] && speech_begin < speech_end)
       speech_begin++;
     while (!results_[speech_end] && speech_end > speech_begin)
@@ -88,11 +90,11 @@ bool Vad::DoVad(const std::vector<float>& wave, bool end_of_stream,
       std::vector<float>::iterator end = audio_buffer_.begin() +
           config_.feature_config.frame_shift * speech_end;
       if (end_of_stream) end = audio_buffer_.end();
-      speech->insert(speech->begin(), begin, end);
+      speech->insert(speech->end(), begin, end);
     }
   }
   t_ += num_frames;
-  return contains_speech;
+  return endpoint_detected_;
 }
 
 // return 1 if current frame is speech

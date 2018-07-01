@@ -49,7 +49,7 @@ typedef enum {
 class Vad {
  public:
   explicit Vad(const VadConfig& config);
-  // return true is wave contains speech frame
+  // return true is contains endpoint
   bool DoVad(const std::vector<float>& wave, bool end_of_stream,
              std::vector<float>* speech = NULL);
   // internal state machine smooth
@@ -57,7 +57,10 @@ class Vad {
   void Reset();
   bool EndpointDetected() const { return endpoint_detected_; }
   const std::vector<bool>& Results() const {
-      return results_;
+    return results_;
+  }
+  void SetDone() {
+    feature_pipeline_.SetDone();
   }
   void Lookback();
 

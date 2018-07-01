@@ -49,14 +49,24 @@ class ResourceManager {
   void set_acoustic_scale(float acoustic_scale);
   void set_skip(int skip);
   void set_max_batch_size(int max_batch_size);
-  void set_num_bins(int num_bins);
-  void set_left_context(int left_context);
-  void set_right_context(int right_context);
+  void set_am_num_bins(int num_bins);
+  void set_am_left_context(int left_context);
+  void set_am_right_context(int right_context);
 
-  void set_cmvn(const std::string& cmvn);
+  void set_vad_num_bins(int num_bins);
+  void set_vad_left_context(int left_context);
+  void set_vad_right_context(int right_context);
+  void set_silence_thresh(float thresh);
+  void set_silence_to_speech_thresh(int thresh);
+  void set_speech_to_sil_thresh(int thresh);
+  void set_endpoint_trigger_thresh(int thresh);
+
+  void set_am_cmvn(const std::string& cmvn);
+  void set_vad_cmvn(const std::string& cmvn);
   void set_hclg(const std::string& hclg);
   void set_tree(const std::string& tree);
-  void set_net(const std::string& net);
+  void set_am_net(const std::string& net);
+  void set_vad_net(const std::string& net);
   void set_pdf_prior(const std::string& pdf_prior);
   void set_lexicon(const std::string& lexicon);
 
@@ -76,24 +86,36 @@ class ResourceManager {
   int max_batch_size_;
 
   // FeaturePipelineConfig
-  int num_bins_;
-  int left_context_;
-  int right_context_;
+  int am_num_bins_;
+  int am_left_context_;
+  int am_right_context_;
 
   // ThreadPool number
   int thread_pool_size_;
 
+  // Vad FeaturePipelineConfig
+  int vad_num_bins_;
+  int vad_left_context_;
+  int vad_right_context_;
+  float silence_thresh_;
+  int silence_to_speech_thresh_;
+  int speech_to_sil_thresh_;
+  int endpoint_trigger_thresh_;
+
   // Config files, all of them are paths
-  std::string cmvn_file_;
+  std::string am_cmvn_file_;
+  std::string vad_cmvn_file_;
   std::string hclg_file_;
   std::string tree_file_;
-  std::string net_file_;
+  std::string am_net_file_;
+  std::string vad_net_file_;
   std::string pdf_prior_file_;
   std::string words_table_file_;  // word list by int, refer to kaldi words.txt
 
   void* faster_decoder_options_;
   void* decodable_options_;
   void* feature_options_;
+  void* vad_options_;
   void* thread_pool_;
   void* hclg_;
   void* tree_;

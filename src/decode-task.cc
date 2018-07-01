@@ -26,6 +26,7 @@ void DecodeTask::operator() (void *resource) {
   FeaturePipeline feature_pipeline(feature_options_);
   OnlineDecodable decodable(tree_, pdf_prior_, decodable_options_,
                             net, &feature_pipeline);
+  Vad vad(vad_options_);
   FasterDecoder decoder(hclg_, decoder_options_);
   decoder.InitDecoding();
   bool done = false;
@@ -33,21 +34,34 @@ void DecodeTask::operator() (void *resource) {
     std::vector<float> wav_data = audio_queue_.Get();
     if (wav_data.size() == 0) {
       // end of stream
-      decodable.SetDone();
       done = true;
     }
-
-    if (wav_data.size() > 0)
-      decodable.AcceptRawWav(wav_data);
+    std::vector<float> speech_wav_data;
+    bool is_endpoint = vad.DoVad(wav_data, done, &speech_wav_data);
+    LOG("wav data %d speech data %d", static_cast<int>(wav_data.size()),
+                                      static_cast<int>(speech_wav_data.size()));
+    if (speech_wav_data.size() > 0) decodable.AcceptRawWav(speech_wav_data);
+    bool reset = false;
+    if (done || is_endpoint) {
+      decodable.SetDone();
+      reset = true;
+    }
     decoder.AdvanceDecoding(&decodable);
     std::vector<int32_t> result;
     decoder.GetBestPath(&result);
     std::ostringstream ss;
+    if (reset) {
+      ss << "FINAL:";
+      decodable.Reset();
+      decoder.InitDecoding();
+    } else {
+      ss << "PARTIAL:";
+    }
     for (size_t i = 0; i < result.size(); i++) {
       ss << " " << words_table_.GetSymbol(result[i]);
     }
     result_queue_.Put(ss.str());
-    LOG("RESULT: %s", ss.str().c_str());
+    LOG("%s", ss.str().c_str());
   }
   LOG("Finish decoding");
 }

@@ -25,6 +25,7 @@
 #include "net.h"
 #include "thread-pool.h"
 #include "message-queue.h"
+#include "vad.h"
 
 namespace xdecoder {
 
@@ -33,6 +34,7 @@ class DecodeTask : public Threadable {
   DecodeTask(const FasterDecoderOptions& decoder_options,
              const DecodableOptions& decodable_options,
              const FeaturePipelineConfig& feature_options,
+             const VadConfig& vad_options,
              const Fst& hclg,
              const Tree& tree,
              const Vector<float>& pdf_prior,
@@ -40,6 +42,7 @@ class DecodeTask : public Threadable {
       decoder_options_(decoder_options),
       decodable_options_(decodable_options),
       feature_options_(feature_options),
+      vad_options_(vad_options),
       hclg_(hclg),
       tree_(tree),
       pdf_prior_(pdf_prior),
@@ -57,6 +60,7 @@ class DecodeTask : public Threadable {
   const FasterDecoderOptions& decoder_options_;
   const DecodableOptions& decodable_options_;
   const FeaturePipelineConfig& feature_options_;
+  const VadConfig& vad_options_;
   const Fst& hclg_;
   const Tree& tree_;
   const Vector<float>& pdf_prior_;

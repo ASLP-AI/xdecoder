@@ -55,13 +55,21 @@ ResourceManager::ResourceManager(): beam_(13.0),
                                     acoustic_scale_(0.1f),
                                     skip_(0),
                                     max_batch_size_(16),
-                                    num_bins_(40),
-                                    left_context_(5),
-                                    right_context_(5),
+                                    am_num_bins_(40),
+                                    am_left_context_(5),
+                                    am_right_context_(5),
                                     thread_pool_size_(8),
+                                    vad_num_bins_(40),
+                                    vad_left_context_(5),
+                                    vad_right_context_(5),
+                                    silence_thresh_(0.5f),
+                                    silence_to_speech_thresh_(3),
+                                    speech_to_sil_thresh_(15),
+                                    endpoint_trigger_thresh_(100),
                                     faster_decoder_options_(NULL),
                                     decodable_options_(NULL),
                                     feature_options_(NULL),
+                                    vad_options_(NULL),
                                     thread_pool_(NULL),
                                     hclg_(NULL),
                                     tree_(NULL),
@@ -78,6 +86,8 @@ ResourceManager::~ResourceManager() {
     delete reinterpret_cast<DecodableOptions*>(decodable_options_);
   if (feature_options_ != NULL)
     delete reinterpret_cast<FeaturePipelineConfig*>(feature_options_);
+  if (vad_options_ != NULL)
+    delete reinterpret_cast<VadConfig*>(vad_options_);
   if (hclg_ != NULL)
     delete reinterpret_cast<Fst*>(hclg_);
   if (tree_ != NULL)
@@ -113,24 +123,56 @@ void ResourceManager::set_max_batch_size(int max_batch_size) {
   max_batch_size_ = max_batch_size;
 }
 
-void ResourceManager::set_num_bins(int num_bins) {
-  num_bins_ = num_bins;
+void ResourceManager::set_am_num_bins(int num_bins) {
+  am_num_bins_ = num_bins;
 }
 
-void ResourceManager::set_left_context(int left_context) {
-  left_context_ = left_context;
+void ResourceManager::set_am_left_context(int left_context) {
+  am_left_context_ = left_context;
 }
 
-void ResourceManager::set_right_context(int right_context) {
-  right_context_ = right_context;
+void ResourceManager::set_am_right_context(int right_context) {
+  am_right_context_ = right_context;
+}
+
+void ResourceManager::set_vad_num_bins(int num_bins) {
+  vad_num_bins_ = num_bins;
+}
+
+void ResourceManager::set_vad_left_context(int left_context) {
+  vad_left_context_ = left_context;
+}
+
+void ResourceManager::set_vad_right_context(int right_context) {
+  vad_right_context_ = right_context;
+}
+
+void ResourceManager::set_silence_thresh(float thresh) {
+  silence_thresh_ = thresh;
+}
+
+void ResourceManager::set_silence_to_speech_thresh(int thresh) {
+  silence_to_speech_thresh_ = thresh;
+}
+
+void ResourceManager::set_speech_to_sil_thresh(int thresh) {
+  speech_to_sil_thresh_ = thresh;
+}
+
+void ResourceManager::set_endpoint_trigger_thresh(int thresh) {
+  endpoint_trigger_thresh_ = thresh;
 }
 
 void ResourceManager::set_thread_pool_size(int size) {
   thread_pool_size_ = size;
 }
 
-void ResourceManager::set_cmvn(const std::string& cmvn) {
-  cmvn_file_ = cmvn;
+void ResourceManager::set_am_cmvn(const std::string& cmvn) {
+  am_cmvn_file_ = cmvn;
+}
+
+void ResourceManager::set_vad_cmvn(const std::string& cmvn) {
+  vad_cmvn_file_ = cmvn;
 }
 
 void ResourceManager::set_hclg(const std::string& hclg) {
@@ -141,8 +183,12 @@ void ResourceManager::set_tree(const std::string& tree) {
   tree_file_ = tree;
 }
 
-void ResourceManager::set_net(const std::string& net) {
-  net_file_ = net;
+void ResourceManager::set_am_net(const std::string& net) {
+  am_net_file_ = net;
+}
+
+void ResourceManager::set_vad_net(const std::string& net) {
+  vad_net_file_ = net;
 }
 
 void ResourceManager::set_pdf_prior(const std::string& pdf_prior) {
@@ -166,12 +212,26 @@ void ResourceManager::init() {
   decodable_options_ = reinterpret_cast<void*>(decodable_options);
 
   FeaturePipelineConfig* feature_options = new FeaturePipelineConfig();
-  feature_options->num_bins = num_bins_;
-  feature_options->left_context = left_context_;
-  feature_options->right_context = right_context_;
-  CHECK(cmvn_file_ != "");
-  feature_options->cmvn_file = cmvn_file_;
+  feature_options->num_bins = am_num_bins_;
+  feature_options->left_context = am_left_context_;
+  feature_options->right_context = am_right_context_;
+  CHECK(am_cmvn_file_ != "");
+  feature_options->cmvn_file = am_cmvn_file_;
   feature_options_ = reinterpret_cast<void*>(feature_options);
+
+  VadConfig *vad_options = new VadConfig();
+  vad_options->feature_config.num_bins = vad_num_bins_;
+  vad_options->feature_config.left_context = vad_left_context_;
+  vad_options->feature_config.right_context = vad_right_context_;
+  CHECK(vad_cmvn_file_ != "");
+  vad_options->feature_config.cmvn_file = vad_cmvn_file_;
+  CHECK(vad_net_file_ != "");
+  vad_options->net_file = vad_net_file_;
+  vad_options->silence_thresh = silence_thresh_;
+  vad_options->silence_to_speech_thresh = silence_to_speech_thresh_;
+  vad_options->speech_to_sil_thresh = speech_to_sil_thresh_;
+  vad_options->endpoint_trigger_thresh = endpoint_trigger_thresh_;
+  vad_options_ = reinterpret_cast<void*>(vad_options);
 
   CHECK(hclg_file_ != "");
   hclg_ = reinterpret_cast<void*>(new Fst(hclg_file_));
@@ -190,7 +250,7 @@ void ResourceManager::init() {
   CHECK(thread_pool_size_ > 0);
   resource_pool_.resize(thread_pool_size_, NULL);
   for (int i = 0; i < thread_pool_size_; i++) {
-    Net *am_net = new Net(net_file_);
+    Net *am_net = new Net(am_net_file_);
     resource_pool_[i] = reinterpret_cast<void *>(am_net);
   }
   thread_pool_ = reinterpret_cast<void *>(
@@ -204,6 +264,7 @@ void ResourceManager::add_recognizer(Recognizer *recognizer) {
       *(reinterpret_cast<FasterDecoderOptions*>(faster_decoder_options_)),
       *(reinterpret_cast<DecodableOptions*>(decodable_options_)),
       *(reinterpret_cast<FeaturePipelineConfig*>(feature_options_)),
+      *(reinterpret_cast<VadConfig*>(vad_options_)),
       *(reinterpret_cast<Fst*>(hclg_)),
       *(reinterpret_cast<Tree*>(tree_)),
       *(reinterpret_cast<Vector<float>*>(pdf_prior_)),
