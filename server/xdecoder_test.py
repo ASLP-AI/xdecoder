@@ -15,7 +15,7 @@ manager.set_am_right_context(5)
 manager.set_vad_num_bins(40)
 manager.set_vad_left_context(5)
 manager.set_vad_right_context(5)
-manager.set_silence_thresh(0.9);
+manager.set_silence_thresh(0.5);
 manager.set_silence_to_speech_thresh(3)
 manager.set_speech_to_sil_thresh(15)
 manager.set_endpoint_trigger_thresh(100)

@@ -1,0 +1,39 @@
+{
+  "runtime": {
+    "thread_pool_size": 8   
+  },
+
+  "decoder": {
+    "beam": 13.0,
+    "max_active": 7000,
+    "acoustic_scale": 0.066667,
+    "skip": 0,
+    "max_batch_size": 128,
+    "hclg": "exp/hclg",
+    "tree": "exp/tree",
+    "pdf_prior": "exp/pdf_prior",
+    "lexicon": "exp/words.txt"
+  },
+
+  "am": {
+    "net": "exp/am.net",
+    "num_bins": 40,
+    "left_context": 5,
+    "right_context": 5,
+    "cmvn": "exp/cmvn"
+  },
+
+  "vad": {
+    "net": "exp/vad.net",
+    "num_bins": 40,
+    "left_context": 5,
+    "right_context": 5,
+    "cmvn": "exp/vad.cmvn",
+    "silence_thresh": 0.5,
+    "speech_to_silence_thresh": 3,
+    "silence_to_speech_thresh": 15,
+    "endpoint_trigger_thresh": 100
+  }
+}
+
+
