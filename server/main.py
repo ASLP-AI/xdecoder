@@ -1,3 +1,4 @@
+# coding=utf-8
 # Created on 2018-07-01
 # Author: Binbin Zhang
 
@@ -22,6 +23,51 @@ class MainHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("Hello, world")
 
+class EchoWebSocketHandler(tornado.websocket.WebSocketHandler):
+    def open(self):
+        print("WebSocket opened")
+
+    def on_message(self, message):
+        self.write_message(u"You said: " + message)
+
+    def on_close(self):
+        print("WebSocket closed")
+
+class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
+    def check_origin(self, orgin):
+        return True
+
+    def open(self):
+        print("WebSocket opened")
+        self.recognizer = xdecoder.Recognizer()
+        self.application.manager.add_recognizer(self.recognizer)
+    
+    def on_message(self, message):
+        print('Message', len(message))
+        if message == 'EOS':
+            self.recognizer.set_done()
+        else:
+            assert(len(message) % 2 == 0)
+            size = int(len(message) / 2)
+            short_data = struct.unpack('!%dh' % size, message)
+            float_data = xdecoder.FloatVector(size)
+            for i in range(len(short_data)):
+                float_data[i] = float(short_data[i])
+            self.recognizer.add_wav(float_data)
+            text_result = self.recognizer.get_result()
+            arr = text_result.split(':')
+            status = arr[0].strip()
+            result = ''
+            if len(arr) == 2: result = arr[1].strip()
+            json_result = json.dumps({ "status": status, 
+                                       "result": result })
+            # logging.debug(json_result)
+            self.write_message(json_result)
+    
+    def on_close(self):
+        print("WebSocket closed")
+        pass
+    
 class Application(tornado.web.Application):
     def __init__(self):
         settings = {
@@ -29,6 +75,8 @@ class Application(tornado.web.Application):
         }
         handlers = [
             (r'/', MainHandler),
+            (r'/ws/echo', EchoWebSocketHandler),
+            (r'/ws/decode', DecodeWebSocketHandler),
         ]
 
         tornado.web.Application.__init__(self, handlers, **settings)
@@ -75,7 +123,7 @@ class Application(tornado.web.Application):
         tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":
-    usage = 'usage: python main.py main.ini'
+    usage = 'usage: python main.py config.json'
     parser = argparse.ArgumentParser(description=usage)
     parser.add_argument('config_file', help='json config file')
     FLAGS = parser.parse_args()

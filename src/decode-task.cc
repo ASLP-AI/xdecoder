@@ -51,11 +51,11 @@ void DecodeTask::operator() (void *resource) {
     decoder.GetBestPath(&result);
     std::ostringstream ss;
     if (reset) {
-      ss << "FINAL:";
+      ss << "final:";
       decodable.Reset();
       decoder.InitDecoding();
     } else {
-      ss << "PARTIAL:";
+      ss << "partial:";
     }
     for (size_t i = 0; i < result.size(); i++) {
       ss << " " << words_table_.GetSymbol(result[i]);
