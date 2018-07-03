@@ -53,6 +53,7 @@ tools/%: tools/%.cc $(OBJ)
 
 clean:
 	rm -rf $(OBJ); rm -rf $(TEST); rm -rf $(TOOL); \
-    rm -rf src/*.d; rm -rf test/*.d; rm -rf tools/*.d
+    rm -rf src/*.d; rm -rf test/*.d; rm -rf tools/*.d; \
+    make -C server clean
 
 -include */*.d

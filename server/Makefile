@@ -1,7 +1,7 @@
 
 all:
 	swig -c++ -python -py3 resource-manager.i
-	python setup.py install
+	python3 setup.py install
 
 .PHONY: clean
 clean:

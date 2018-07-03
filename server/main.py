@@ -118,8 +118,8 @@ class Application(tornado.web.Application):
         self.manager.set_endpoint_trigger_thresh(self.config["vad"]["endpoint_trigger_thresh"])
 
     def start(self):
-        logging.info('server start, port: %d...' % 8888)
-        self.listen(8888)
+        logging.info('server start, port: %d...' % 80)
+        self.listen(80)
         tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":
