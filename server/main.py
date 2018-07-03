@@ -21,7 +21,7 @@ FLAGS = None
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("Hello, world")
+        self.write("Hello, world %s" % socket.gethostname())
 
 class EchoWebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self):
