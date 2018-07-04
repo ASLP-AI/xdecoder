@@ -8,9 +8,19 @@ services:
       restart_policy:
         condition: on-failure
     ports:
-      - "4000:80"
-    networks:
-      - webnet
+      - "10086:10000"
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:latest
+    volumes:
+      - db:/var/lib/mysql
+    ports:
+      - "13306:3306"
+    environment:
+      MYSQL_DATABASE: asr
+      MYSQL_ROOT_PASSWORD: admin
 
   visualizer:
       image: dockersamples/visualizer:stable
@@ -22,5 +32,6 @@ services:
       deploy:
         placement:
           constraints: [node.role == manager]
-networks:
-  webnet:
+
+volumes:
+  db:

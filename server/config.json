@@ -3,6 +3,14 @@
     "thread_pool_size": 8   
   },
 
+  "db": {
+    "host": "127.0.0.1",
+    "user": "root",
+    "passwd": "admin",
+    "db": "asr",
+    "charset": "utf8"
+  },
+
   "decoder": {
     "beam": 13.0,
     "max_active": 7000,

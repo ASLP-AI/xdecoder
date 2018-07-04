@@ -47,6 +47,8 @@ class DecodeTask : public Threadable {
       tree_(tree),
       pdf_prior_(pdf_prior),
       words_table_(words_table) {}
+
+  ~DecodeTask() {}
   // Here resource is a pointer to a Nnet ojbect
   virtual void operator() (void* resource);
   void AddWavData(const std::vector<float>& data) {

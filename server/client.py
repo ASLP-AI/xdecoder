@@ -6,6 +6,7 @@ import wave
 import websocket
 import struct
 import json
+import platform
 
 try:
     import thread
@@ -46,6 +47,7 @@ def on_open(ws):
                 ws.send(message, websocket.ABNF.OPCODE_BINARY)
                 print('Send', len(message))
                 time.sleep(0.5)
+        ws.send('<EOS>')
         ws.close()
 
     thread.start_new_thread(run, ())
@@ -56,9 +58,9 @@ if __name__ == '__main__':
     parser.add_argument('wave_file', help='wav file for test')
     FLAGS = parser.parse_args()
     
-    ws = websocket.create_connection("ws://localhost:8888/ws/decode")
     websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("ws://localhost:8888/ws/decode",
+    ws = websocket.WebSocketApp("ws://localhost:10000/ws/decode",
+                                header=['Client-Info: %s' % platform.version() ],
                                 on_open = on_open,
                                 on_message = on_message,
                                 on_error = on_error,

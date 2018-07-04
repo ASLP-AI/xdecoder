@@ -129,7 +129,6 @@ class ThreadPool {
       } else {
         void *resource = pool->GetResource(pthread_self());
         (*task)(resource);  // Run the task
-        delete task;
       }
     }
     return NULL;

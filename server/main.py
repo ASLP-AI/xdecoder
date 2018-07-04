@@ -13,14 +13,22 @@ import socket
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import hashlib
 import xdecoder
 import argparse
 import json
+import dbhelper
 
 FLAGS = None
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
+        try:
+            self.user_agent = self.request.headers['User-Agent']
+        except KeyError as name_err:
+            logging.warning("DecoderWebsocketHandler: No 'User-Agent' key")
+            self.user_agent = 'Unknown'
+        print(self.user_agent)
         self.write("Hello, world %s" % socket.gethostname())
 
 class EchoWebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -38,35 +46,59 @@ class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self):
-        print("WebSocket opened")
         self.recognizer = xdecoder.Recognizer()
         self.application.manager.add_recognizer(self.recognizer)
+        try:
+            self.client_info = self.request.headers['Client-Info']
+        except KeyError as name_err:
+            logging.warning("DecoderWebsocketHandler: No 'Client-Info' key")
+            self.client_info = 'Unknown'
+        self.wav_data = b''
+        self.results = []
     
     def on_message(self, message):
-        print('Message', len(message))
-        if message == 'EOS':
+        if message == '<EOS>':
             self.recognizer.set_done()
         else:
             assert(len(message) % 2 == 0)
             size = int(len(message) / 2)
             short_data = struct.unpack('!%dh' % size, message)
+            wav_data = struct.pack('<%dh' % size, *short_data)
+            self.wav_data += wav_data
             float_data = xdecoder.FloatVector(size)
             for i in range(len(short_data)):
                 float_data[i] = float(short_data[i])
             self.recognizer.add_wav(float_data)
-            text_result = self.recognizer.get_result()
-            arr = text_result.split(':')
-            status = arr[0].strip()
-            result = ''
-            if len(arr) == 2: result = arr[1].strip()
-            json_result = json.dumps({ "status": status, 
-                                       "result": result })
-            # logging.debug(json_result)
-            self.write_message(json_result)
+
+        text_result = self.recognizer.get_result()
+        arr = text_result.split(':')
+        status = arr[0].strip()
+        result = ''
+        if len(arr) == 2: result = arr[1].strip()
+        json_result = json.dumps({ "status": status, 
+                                   "result": result })
+        if status == 'final' and result != '':
+            self.results.append(result)
+        self.write_message(json_result)
     
     def on_close(self):
-        print("WebSocket closed")
-        pass
+        time_str = str(int(time.time()))
+        m = hashlib.md5()
+        m.update(time_str.encode('utf8'))
+        wav_name = time_str + '_' +  m.hexdigest()[:10] + '.wav'
+        self.write_wav_file(wav_name, self.wav_data)
+        all_result = '\n'.join(self.results)
+        db = dbhelper.DbHelper(**self.application.db_config)
+        db.insert(wav_name, all_result, self.client_info)
+
+    def write_wav_file(self, file_name, data):
+        fid = wave.open(file_name, 'wb')
+        fid.setnchannels(1)
+        fid.setsampwidth(2)
+        fid.setframerate(16000)
+        fid.writeframes(data)
+        fid.close()
+        logging.info('write new wav file %s' % file_name)
     
 class Application(tornado.web.Application):
     def __init__(self):
@@ -82,13 +114,19 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, **settings)
         logging.basicConfig(level = logging.DEBUG, 
                             format = '%(levelname)s %(asctime)s (%(filename)s:%(funcName)s():%(lineno)d) %(message)s') 
-        self.manager = xdecoder.ResourceManager()
         with open(FLAGS.config_file, "r") as fid:
             self.config = json.load(fid)
-        self.set_parameters()
-        self.manager.init()
-    
-    def set_parameters(self):
+        self.init_db()
+        self.init_manager()
+
+    def init_db(self):
+        self.db_config = self.config["db"]
+        db = dbhelper.DbHelper(**self.db_config)
+        if not db.asr_table_exist():
+            db.create_asr_table()
+
+    def init_manager(self):
+        self.manager = xdecoder.ResourceManager()
         self.manager.set_thread_pool_size(self.config["runtime"]["thread_pool_size"])
 
         self.manager.set_beam(self.config["decoder"]["beam"])
@@ -116,10 +154,11 @@ class Application(tornado.web.Application):
         self.manager.set_silence_to_speech_thresh(self.config["vad"]["silence_to_speech_thresh"])
         self.manager.set_speech_to_sil_thresh(self.config["vad"]["speech_to_silence_thresh"])
         self.manager.set_endpoint_trigger_thresh(self.config["vad"]["endpoint_trigger_thresh"])
+        self.manager.init()
 
     def start(self):
-        logging.info('server start, port: %d...' % 80)
-        self.listen(80)
+        logging.info('server start, port: %d...' % 10000)
+        self.listen(10000)
         tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":
