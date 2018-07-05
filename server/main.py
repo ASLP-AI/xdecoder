@@ -86,10 +86,12 @@ class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
         m = hashlib.md5()
         m.update(time_str.encode('utf8'))
         wav_name = time_str + '_' +  m.hexdigest()[:10] + '.wav'
-        self.write_wav_file(wav_name, self.wav_data)
+        wav_path = self.application.wav_dir + '/' + wav_name
+        self.write_wav_file(wav_path, self.wav_data)
         all_result = '\n'.join(self.results)
-        db = dbhelper.DbHelper(**self.application.db_config)
-        db.insert(wav_name, all_result, self.client_info)
+        if self.application.use_db:
+            db = dbhelper.DbHelper(**self.application.db_config)
+            db.insert(wav_path, all_result, self.client_info)
 
     def write_wav_file(self, file_name, data):
         fid = wave.open(file_name, 'wb')
@@ -116,14 +118,24 @@ class Application(tornado.web.Application):
                             format = '%(levelname)s %(asctime)s (%(filename)s:%(funcName)s():%(lineno)d) %(message)s') 
         with open(FLAGS.config_file, "r") as fid:
             self.config = json.load(fid)
+
+        self.init_wav_dir()
+        time.sleep(10)
         self.init_db()
         self.init_manager()
+    
+    def init_wav_dir(self):
+        self.wav_dir = self.config["wav_dir"]
+        if not os.path.exists(self.wav_dir):
+            os.makedirs(self.wav_dir)
 
     def init_db(self):
-        self.db_config = self.config["db"]
-        db = dbhelper.DbHelper(**self.db_config)
-        if not db.asr_table_exist():
-            db.create_asr_table()
+        self.use_db = self.config["use_db"]
+        if self.use_db:
+            self.db_config = self.config["db"]
+            db = dbhelper.DbHelper(**self.db_config)
+            if not db.asr_table_exist():
+                db.create_asr_table()
 
     def init_manager(self):
         self.manager = xdecoder.ResourceManager()

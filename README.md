@@ -23,6 +23,12 @@ is the first priority now.
 - 2018-04-22 Add fst and corresponding tools
 - 2018-04-10 Add varint support
 
+## Docker Deploy
+
+1. install docker: https://docs.docker.com/install/
+2. clone xdecoder code: https://github.com/robin1001/xdecoder.git
+3. prepare all config files to config dir, including am net, am cmvn, hclg, words.txt, vad net, vad cmvn, and the json config files for xdecoder runtime, like xdecoder.json
+
 ## Solutions
 
 This is our solutions for the above requirements.

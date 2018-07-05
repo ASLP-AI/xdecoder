@@ -3,8 +3,11 @@
     "thread_pool_size": 8   
   },
 
+  "wav_dir": "./www/wav",
+  "use_db": true,
+
   "db": {
-    "host": "127.0.0.1",
+    "host": "mysql",
     "user": "root",
     "passwd": "admin",
     "db": "asr",
@@ -17,26 +20,26 @@
     "acoustic_scale": 0.066667,
     "skip": 0,
     "max_batch_size": 128,
-    "hclg": "exp/hclg",
-    "tree": "exp/tree",
-    "pdf_prior": "exp/pdf_prior",
-    "lexicon": "exp/words.txt"
+    "hclg": "config/hclg",
+    "tree": "config/tree",
+    "pdf_prior": "config/pdf_prior",
+    "lexicon": "config/words.txt"
   },
 
   "am": {
-    "net": "exp/am.net",
+    "net": "config/am.net",
     "num_bins": 40,
     "left_context": 5,
     "right_context": 5,
-    "cmvn": "exp/cmvn"
+    "cmvn": "config/am.cmvn"
   },
 
   "vad": {
-    "net": "exp/vad.net",
+    "net": "config/vad.net",
     "num_bins": 40,
     "left_context": 5,
     "right_context": 5,
-    "cmvn": "exp/vad.cmvn",
+    "cmvn": "config/vad.cmvn",
     "silence_thresh": 0.5,
     "speech_to_silence_thresh": 3,
     "silence_to_speech_thresh": 15,

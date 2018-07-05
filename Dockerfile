@@ -13,17 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip3 install setuptools tornado==5.0.2 mysqlclient
 
-RUN git clone --branch master --recursive https://github.com/robin1001/xdecoder.git
+ADD . /xdecoder
+WORKDIR /xdecoder
 
-RUN cd xdecoder \
-    && make server \
-    && make clean
-
-WORKDIR xdecoder
-ADD exp exp
+RUN make server && make clean
 
 RUN pwd && ls
 
-EXPOSE 80
+EXPOSE 10000
 
-CMD ["python3", "server/main.py", "server/config.json"]
+CMD ["python3", "server/main.py", "config/xdecoder.json"]
