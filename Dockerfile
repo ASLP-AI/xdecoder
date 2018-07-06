@@ -20,6 +20,6 @@ RUN make server && make clean
 
 RUN pwd && ls
 
-EXPOSE 10000
+EXPOSE 10086
 
 CMD ["python3", "server/main.py", "config/xdecoder.json"]

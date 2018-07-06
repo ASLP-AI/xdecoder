@@ -14,20 +14,32 @@ So serveral things should be taken into account.
 I make my mind to make XDecoder to support ASR service as well, and ASR service
 is the first priority now.
 
-## News
+## Docker Deploy
 
+- Install docker and docker compose tools: https://docs.docker.com/install/
+
+- Clone xdecoder code
+
+    ``` sh
+    git clone https://github.com/robin1001/xdecoder.git
+    ```
+
+- Prepare all config files, copy it to ./config
+    - decoder related files: am net, am cmvn, hclg, tree, pdf_prior, words.txt, vad net, vad cmvn 
+    - config files for runtime: xdecoder.json
+
+- Now you can start the ASR service by
+    ``` sh
+    git clone https://github.com/robin1001/xdecoder.git
+    ```
+
+## News
 - 2018-06-27 make decision to make XDecoder support ASR service, and ASR service will be the P0 priority
 - 2018-06-20 xdecode offline tool works
 - 2018-05-23 Add fft, fbank, feature pipeline
 - 2018-05-22 Add net inference
 - 2018-04-22 Add fst and corresponding tools
 - 2018-04-10 Add varint support
-
-## Docker Deploy
-
-1. install docker: https://docs.docker.com/install/
-2. clone xdecoder code: https://github.com/robin1001/xdecoder.git
-3. prepare all config files to config dir, including am net, am cmvn, hclg, words.txt, vad net, vad cmvn, and the json config files for xdecoder runtime, like xdecoder.json
 
 ## Solutions
 

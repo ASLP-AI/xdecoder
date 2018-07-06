@@ -59,7 +59,7 @@ if __name__ == '__main__':
     FLAGS = parser.parse_args()
     
     websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("ws://localhost:10086/ws/decode",
+    ws = websocket.WebSocketApp("ws://localhost:80/ws/decode",
                                 header=['Client-Info: %s' % platform.version() ],
                                 on_open = on_open,
                                 on_message = on_message,

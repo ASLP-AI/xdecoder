@@ -84,12 +84,12 @@ bool Vad::DoVad(const std::vector<float>& wave, bool end_of_stream,
     while (!results_[speech_end] && speech_end > speech_begin)
       speech_end--;
     speech->clear();
+    std::vector<float>::iterator begin = audio_buffer_.begin() +
+        config_.feature_config.frame_shift * speech_begin;
+    std::vector<float>::iterator end = audio_buffer_.begin() +
+        config_.feature_config.frame_shift * speech_end;
+    if (end_of_stream) end = audio_buffer_.end();
     if (speech_begin < speech_end) {
-      std::vector<float>::iterator begin = audio_buffer_.begin() +
-          config_.feature_config.frame_shift * speech_begin;
-      std::vector<float>::iterator end = audio_buffer_.begin() +
-          config_.feature_config.frame_shift * speech_end;
-      if (end_of_stream) end = audio_buffer_.end();
       speech->insert(speech->end(), begin, end);
     }
   }

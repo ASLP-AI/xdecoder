@@ -1,10 +1,11 @@
 {
-  "runtime": {
-    "thread_pool_size": 8   
-  },
-
   "wav_dir": "./www/wav",
   "use_db": true,
+
+  "runtime": {
+    "port": 10086,
+    "thread_pool_size": 8   
+  },
 
   "db": {
     "host": "mysql",

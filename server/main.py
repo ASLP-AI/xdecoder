@@ -31,6 +31,12 @@ class MainHandler(tornado.web.RequestHandler):
         print(self.user_agent)
         self.write("Hello, world %s" % socket.gethostname())
 
+class HistoryHandler(tornado.web.RequestHandler):
+    def get(self):
+        db = dbhelper.DbHelper(**self.application.db_config)
+        history = db.get_all_history()
+        self.render("static/history.html", history = history)
+
 class EchoWebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         print("WebSocket opened")
@@ -109,6 +115,7 @@ class Application(tornado.web.Application):
         }
         handlers = [
             (r'/', MainHandler),
+            (r'/history', HistoryHandler),
             (r'/ws/echo', EchoWebSocketHandler),
             (r'/ws/decode', DecodeWebSocketHandler),
         ]
@@ -120,9 +127,12 @@ class Application(tornado.web.Application):
             self.config = json.load(fid)
 
         self.init_wav_dir()
+        logging.info("init wav dir ok")
         time.sleep(10)
         self.init_db()
+        logging.info("init database ok")
         self.init_manager()
+        logging.info("init recognition engine ok")
     
     def init_wav_dir(self):
         self.wav_dir = self.config["wav_dir"]
@@ -169,8 +179,8 @@ class Application(tornado.web.Application):
         self.manager.init()
 
     def start(self):
-        logging.info('server start, port: %d...' % 10000)
-        self.listen(10000)
+        logging.info('server start, port: %d...' % self.config["runtime"]["port"])
+        self.listen(self.config["runtime"]["port"])
         tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":

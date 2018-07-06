@@ -11,7 +11,7 @@ services:
     volumes:
       - .:/xdecoder
     ports:
-      - "10086:10000"
+      - "10086:10086"
     depends_on:
       - mysql
 
@@ -22,6 +22,19 @@ services:
     environment:
       MYSQL_DATABASE: asr
       MYSQL_ROOT_PASSWORD: admin
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - .:/xdecoder:ro
+    ports:
+     - "80:80"
+    environment:
+      - NGINX_PORT=80
+    depends_on:
+      - xdecoder
+      - mysql
 
 #  visualizer:
 #      image: dockersamples/visualizer:stable
