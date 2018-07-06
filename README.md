@@ -28,9 +28,13 @@ is the first priority now.
     - decoder related files: am net, am cmvn, hclg, tree, pdf_prior, words.txt, vad net, vad cmvn 
     - config files for runtime: xdecoder.json
 
-- Now you can start the ASR service by
+- Build docker image
     ``` sh
-    git clone https://github.com/robin1001/xdecoder.git
+    docker build -t xdecoder .
+    ```
+- Run servie by docker swarm
+    ``` sh
+    docker stack deploy -c docker-compose.yml xdecoder_service
     ```
 
 ## News

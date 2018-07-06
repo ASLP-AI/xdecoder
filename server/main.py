@@ -33,9 +33,25 @@ class MainHandler(tornado.web.RequestHandler):
 
 class HistoryHandler(tornado.web.RequestHandler):
     def get(self):
+        page = int(self.get_argument('page', 0, strip=True))
+        page_items = int(self.get_argument('page_items', 10, strip=True))
         db = dbhelper.DbHelper(**self.application.db_config)
-        history = db.get_all_history()
-        self.render("static/history.html", history = history)
+        num_pages = int((db.get_history_count() - 1) / page_items + 1);
+        if page < 0: page = 0
+        if page >= num_pages: page = num_pages - 1
+        offset = page * page_items
+        start_page = page - 5
+        if start_page < 0: start_page = 0
+        end_page = page + 5
+        if end_page > num_pages: end_page = num_pages - 1
+
+        history = db.get_all_history(page * page_items, page_items)
+        self.render("static/history.html", history = history,
+                                           page_items = page_items,
+                                           page = page,
+                                           num_pages = num_pages,
+                                           start_page = start_page,
+                                           end_page = end_page)
 
 class EchoWebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self):
@@ -61,7 +77,7 @@ class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
             self.client_info = 'Unknown'
         self.wav_data = b''
         self.results = []
-    
+
     def on_message(self, message):
         if message == '<EOS>':
             self.recognizer.set_done()
@@ -81,12 +97,12 @@ class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
         status = arr[0].strip()
         result = ''
         if len(arr) == 2: result = arr[1].strip()
-        json_result = json.dumps({ "status": status, 
+        json_result = json.dumps({ "status": status,
                                    "result": result })
         if status == 'final' and result != '':
             self.results.append(result)
         self.write_message(json_result)
-    
+
     def on_close(self):
         time_str = str(int(time.time()))
         m = hashlib.md5()
@@ -107,7 +123,7 @@ class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
         fid.writeframes(data)
         fid.close()
         logging.info('write new wav file %s' % file_name)
-    
+
 class Application(tornado.web.Application):
     def __init__(self):
         settings = {
@@ -121,8 +137,8 @@ class Application(tornado.web.Application):
         ]
 
         tornado.web.Application.__init__(self, handlers, **settings)
-        logging.basicConfig(level = logging.DEBUG, 
-                            format = '%(levelname)s %(asctime)s (%(filename)s:%(funcName)s():%(lineno)d) %(message)s') 
+        logging.basicConfig(level = logging.DEBUG,
+                            format = '%(levelname)s %(asctime)s (%(filename)s:%(funcName)s():%(lineno)d) %(message)s')
         with open(FLAGS.config_file, "r") as fid:
             self.config = json.load(fid)
 
@@ -133,7 +149,7 @@ class Application(tornado.web.Application):
         logging.info("init database ok")
         self.init_manager()
         logging.info("init recognition engine ok")
-    
+
     def init_wav_dir(self):
         self.wav_dir = self.config["wav_dir"]
         if not os.path.exists(self.wav_dir):

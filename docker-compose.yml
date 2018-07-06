@@ -2,7 +2,7 @@ version: "3"
 services:
   xdecoder:
     # replace username/repo:tag with your name and image details
-    # image: xdecoder
+    image: xdecoder
     build: .
     deploy:
       replicas: 3
@@ -29,23 +29,23 @@ services:
       - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - .:/xdecoder:ro
     ports:
-     - "80:80"
+     - "10087:80"
     environment:
       - NGINX_PORT=80
     depends_on:
       - xdecoder
       - mysql
 
-#  visualizer:
-#      image: dockersamples/visualizer:stable
-#      ports:
-#        - "8080:8080"
-#      stop_grace_period: 1m30s
-#      volumes:
-#        - "/var/run/docker.sock:/var/run/docker.sock"
-#      deploy:
-#        placement:
-#          constraints: [node.role == manager]
-#
+  visualizer:
+      image: dockersamples/visualizer:stable
+      ports:
+        - "8080:8080"
+      stop_grace_period: 1m30s
+      volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock"
+      deploy:
+        placement:
+          constraints: [node.role == manager]
+
 volumes:
   mydb:

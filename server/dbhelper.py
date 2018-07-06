@@ -19,7 +19,7 @@ class DbHelper:
     def __del__(self):
         if self.connection is not None:
             self.connection.close()
-    
+
     def asr_table_exist(self):
         sql_cmd = '''SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'history' '''
         self.cursor.execute(sql_cmd)
@@ -29,7 +29,7 @@ class DbHelper:
             return True
 
     def create_asr_table(self):
-        sql_cmd = '''CREATE TABLE history 
+        sql_cmd = '''CREATE TABLE history
                      (id int NOT NULL AUTO_INCREMENT,
                       time datetime NOT NULL,
                       wav_path text NOT NULL,
@@ -47,8 +47,13 @@ class DbHelper:
         except MySQLdb.Error as e:
             self.connection.rollback()
 
-    def get_all_history(self):
-        sql_cmd = '''SELECT * FROM history ORDER BY id DESC'''
+    def get_history_count(self):
+        sql_cmd = '''SELECT COUNT(*) FROM history'''
+        self.cursor.execute(sql_cmd)
+        return self.cursor.fetchone()[0]
+
+    def get_all_history(self, offset, number):
+        sql_cmd = '''SELECT * FROM history ORDER BY id DESC LIMIT %d,%d''' % (offset, number)
         self.cursor.execute(sql_cmd)
         return self.cursor.fetchall()
 
