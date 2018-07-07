@@ -55,11 +55,15 @@ def on_open(ws):
 if __name__ == '__main__':
     usage = 'Simulate a websocket client request'
     parser = argparse.ArgumentParser(description=usage)
+    parser.add_argument('--ip', default='localhost',
+                        help='xdecoder server ip')
+    parser.add_argument('--port', type=int, default='10087',
+                        help='xdecoder server port')
     parser.add_argument('wave_file', help='wav file for test')
     FLAGS = parser.parse_args()
     
     websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("ws://localhost:80/ws/decode",
+    ws = websocket.WebSocketApp("ws://%s:%d/ws/decode" % (FLAGS.ip, FLAGS.port),
                                 header=['Client-Info: %s' % platform.version() ],
                                 on_open = on_open,
                                 on_message = on_message,

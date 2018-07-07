@@ -1,6 +1,6 @@
 version: "3"
 services:
-  xdecoder:
+  decoder:
     # replace username/repo:tag with your name and image details
     image: xdecoder
     build: .
@@ -33,7 +33,7 @@ services:
     environment:
       - NGINX_PORT=80
     depends_on:
-      - xdecoder
+      - decoder
       - mysql
 
   visualizer:

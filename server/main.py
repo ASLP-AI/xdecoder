@@ -36,10 +36,10 @@ class HistoryHandler(tornado.web.RequestHandler):
         page = int(self.get_argument('page', 0, strip=True))
         page_items = int(self.get_argument('page_items', 10, strip=True))
         db = dbhelper.DbHelper(**self.application.db_config)
-        num_pages = int((db.get_history_count() - 1) / page_items + 1);
+        history_count = db.get_history_count()
+        num_pages = int((history_count - 1) / page_items) + 1;
         if page < 0: page = 0
         if page >= num_pages: page = num_pages - 1
-        offset = page * page_items
         start_page = page - 5
         if start_page < 0: start_page = 0
         end_page = page + 5
@@ -126,17 +126,6 @@ class DecodeWebSocketHandler(tornado.websocket.WebSocketHandler):
 
 class Application(tornado.web.Application):
     def __init__(self):
-        settings = {
-            "static_path": os.path.join(os.path.dirname(__file__), "static"),
-        }
-        handlers = [
-            (r'/', MainHandler),
-            (r'/history', HistoryHandler),
-            (r'/ws/echo', EchoWebSocketHandler),
-            (r'/ws/decode', DecodeWebSocketHandler),
-        ]
-
-        tornado.web.Application.__init__(self, handlers, **settings)
         logging.basicConfig(level = logging.DEBUG,
                             format = '%(levelname)s %(asctime)s (%(filename)s:%(funcName)s():%(lineno)d) %(message)s')
         with open(FLAGS.config_file, "r") as fid:
@@ -144,6 +133,21 @@ class Application(tornado.web.Application):
 
         self.init_wav_dir()
         logging.info("init wav dir ok")
+
+        settings = {
+            "static_path": os.path.join(os.path.dirname(__file__), "static"),
+        }
+        logging.info(settings)
+        handlers = [
+            (r'/', MainHandler),
+            (r'/history', HistoryHandler),
+            (r'/ws/echo', EchoWebSocketHandler),
+            (r'/ws/decode', DecodeWebSocketHandler),
+            (r'/static/', tornado.web.StaticFileHandler, dict(path=settings['static_path']))
+        ]
+
+        tornado.web.Application.__init__(self, handlers, **settings)
+
         time.sleep(10)
         self.init_db()
         logging.info("init database ok")
