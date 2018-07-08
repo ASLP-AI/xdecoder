@@ -18,6 +18,7 @@ import xdecoder
 import argparse
 import json
 import dbhelper
+import urllib.parse
 
 FLAGS = None
 
@@ -46,6 +47,36 @@ class HistoryHandler(tornado.web.RequestHandler):
         if end_page > num_pages: end_page = num_pages - 1
 
         history = db.get_all_history(page * page_items, page_items)
+        self.render("static/history.html", history = history,
+                                           page_items = page_items,
+                                           page = page,
+                                           num_pages = num_pages,
+                                           start_page = start_page,
+                                           end_page = end_page)
+
+class SearchHandler(tornado.web.RequestHandler):
+    def get(self):
+        text = self.get_argument('input', '', strip = True)
+        filed = None
+        keyword = ''
+        arr = text.split(':')
+        if len(arr) == 2:
+            filed = arr[0].strip()
+            keyword = arr[1].strip()
+        else:
+            keyword = text.strip()
+        page = int(self.get_argument('page', 0, strip=True))
+        page_items = int(self.get_argument('page_items', 10, strip=True))
+        db = dbhelper.DbHelper(**self.application.db_config)
+        count = db.find_count(keyword, filed)
+        num_pages = int((count - 1) / page_items) + 1;
+        if page < 0: page = 0
+        if page >= num_pages: page = num_pages - 1
+        start_page = page - 5
+        if start_page < 0: start_page = 0
+        end_page = page + 5
+        if end_page > num_pages: end_page = num_pages - 1
+        history = db.find(keyword, filed)
         self.render("static/history.html", history = history,
                                            page_items = page_items,
                                            page = page,
@@ -141,6 +172,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r'/', MainHandler),
             (r'/history', HistoryHandler),
+            (r'/search', SearchHandler),
             (r'/ws/echo', EchoWebSocketHandler),
             (r'/ws/decode', DecodeWebSocketHandler),
             (r'/static/', tornado.web.StaticFileHandler, dict(path=settings['static_path']))

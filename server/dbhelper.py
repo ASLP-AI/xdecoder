@@ -57,6 +57,27 @@ class DbHelper:
         self.cursor.execute(sql_cmd)
         return self.cursor.fetchall()
 
+    def find_count(self, keyword, field=None):
+        if field == 'recognition':
+            sql_cmd = '''SELECT COUNT(*) FROM history WHERE recognition like "%%%s%%"''' % keyword
+        elif field == 'client_info':
+            sql_cmd = '''SELECT COUNT(*) FROM history WHERE client_info like "%%%s%%"''' % keyword
+        else:
+            sql_cmd = '''SELECT COUNT(*) FROM history WHERE recognition like "%%%s%%" or client_info like "%%%s%%"''' % (keyword, keyword)
+        print(sql_cmd)
+        self.cursor.execute(sql_cmd)
+        return self.cursor.fetchone()[0]
+
+    def find(self, keyword, field=None):
+        if field == 'recognition':
+            sql_cmd = '''SELECT * FROM history WHERE recognition like "%%%s%%"''' % keyword
+        elif field == 'client_info':
+            sql_cmd = '''SELECT * FROM history WHERE client_info like "%%%s%%"''' % keyword
+        else:
+            sql_cmd = '''SELECT * FROM history WHERE recognition like "%%%s%%" or client_info like "%%%s%%"''' % (keyword, keyword)
+        print(sql_cmd)
+        self.cursor.execute(sql_cmd)
+        return self.cursor.fetchall()
 
 if __name__ == '__main__':
     print(CONFIG)

@@ -72,26 +72,17 @@
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <form action="#" method="get">
+          <form action="/search" method="get">
             <div class="row">
-              <!--
-              <div class="col-lg-6">
-              <div class="input-group">
-              <span class="input-group-btn">
-              <button class="btn btn-default" type="button">Go!</button>
-              </span>
-              <input type="text" class="form-control" placeholder="Search for...">
-              </div>
-              </div>
-              -->
               <div class="col-lg-8">
               <div class="input-group">
-              <input type="text" class="form-control"
-                placeholder="Search ..." name="input">
-              <span class="input-group-btn">
-              <button class="btn btn-default" type="submit">Go!</button>
-              </span>
+                <input type="text" class="form-control" placeholder="Search for ..." name="input">
+                <span class="input-group-btn">
+                  <button class="btn btn-default" type="submit">Go!</button>
+                </span >
               </div><!-- /input-group -->
+              <p class="text-info"></p>
+              <p class="text-info">You can use field:keyword to filter the search, field should be in(recognition, client_info), such as recognition:yesterday</p>
               </div><!-- /.col-lg-6 -->
             </div><!-- /.row -->
           </form>
