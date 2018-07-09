@@ -14,6 +14,10 @@ So serveral things should be taken into account.
 I make my mind to make XDecoder to support ASR service as well, and ASR service
 is the first priority now.
 
+## X Decoder Server Design
+
+![Xdecoder Design](res/xdecoder.png)
+
 ## Docker Deploy
 
 - Install docker and docker compose tools: https://docs.docker.com/install/
@@ -38,6 +42,7 @@ is the first priority now.
     ```
 
 ## News
+- 2018-07-09 xdecoder server swarm works, add design
 - 2018-06-27 make decision to make XDecoder support ASR service, and ASR service will be the P0 priority
 - 2018-06-20 xdecode offline tool works
 - 2018-05-23 Add fft, fbank, feature pipeline
