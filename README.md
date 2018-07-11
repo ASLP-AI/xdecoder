@@ -30,11 +30,11 @@ is the first priority now.
 
 - Prepare all config files, copy it to ./config
     - decoder related files: am net, am cmvn, hclg, tree, pdf_prior, words.txt, vad net, vad cmvn 
-    - config files for runtime: xdecoder.json
+    - config files for runtime: xdecoder.json nginx.conf
 
 - Build docker image
     ``` sh
-    docker build -t xdecoder .
+    docker build -t decoder .
     ```
 - Run servie by docker swarm
     ``` sh

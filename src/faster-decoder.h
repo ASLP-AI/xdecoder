@@ -32,6 +32,7 @@
 #include "hash-list.h"
 #include "fst.h"
 #include "decodable.h"
+#include "object-pool.h"
 
 namespace xdecoder {
 
@@ -56,7 +57,10 @@ class FasterDecoder {
 
   void SetOptions(const FasterDecoderOptions &config) { config_ = config; }
 
-  ~FasterDecoder() { ClearToks(toks_.Clear()); }
+  ~FasterDecoder() {
+    ClearToks(toks_.Clear());
+    delete token_pool_;
+  }
 
   void Decode(Decodable *decodable);
 
@@ -95,8 +99,11 @@ class FasterDecoder {
     // if you are looking for weight_ here, it was removed and now we just have
     // cost_, which corresponds to ConvertToCost(weight_).
     double cost_;
-    inline Token(const Arc &arc, float ac_cost, Token *prev):
-        arc_(arc), prev_(prev), ref_count_(1) {
+    inline Token(): prev_(NULL), ref_count_(1) {}
+    inline void Init(const Arc &arc, float ac_cost, Token *prev) {
+      arc_ = arc;
+      prev_ = prev;
+      ref_count_ = 1;
       if (prev) {
         prev->ref_count_++;
         cost_ = prev->cost_ + arc.weight + ac_cost;
@@ -104,8 +111,13 @@ class FasterDecoder {
         cost_ = arc.weight + ac_cost;
       }
     }
-    inline Token(const Arc &arc, Token *prev):
-        arc_(arc), prev_(prev), ref_count_(1) {
+    inline Token(const Arc &arc, float ac_cost, Token *prev) {
+      Init(arc, ac_cost, prev);
+    }
+    inline void Init(const Arc &arc, Token *prev) {
+      arc_ = arc;
+      prev_ = prev;
+      ref_count_ = 1;
       if (prev) {
         prev->ref_count_++;
         cost_ = prev->cost_ + arc.weight;
@@ -113,14 +125,17 @@ class FasterDecoder {
         cost_ = arc.weight;
       }
     }
+    inline Token(const Arc &arc, Token *prev) {
+      Init(arc, prev);
+    }
     inline bool operator < (const Token &other) {
       return cost_ > other.cost_;
     }
 
-    inline static void TokenDelete(Token *tok) {
+    inline static void TokenDelete(Token *tok, IObjectPool<Token> *token_pool) {
       while (--tok->ref_count_ == 0) {
         Token *prev = tok->prev_;
-        delete tok;
+        token_pool->Delete(tok);
         if (prev == NULL) return;
         else
           tok = prev;
@@ -158,6 +173,9 @@ class FasterDecoder {
 
   // Keep track of the number of frames decoded in the current file.
   int32_t num_frames_decoded_;
+
+  // Token pool
+  IObjectPool<Token> *token_pool_;
 
   // It might seem unclear why we call ClearToks(toks_.Clear()).
   // There are two separate cleanup tasks we need to do at when we start a

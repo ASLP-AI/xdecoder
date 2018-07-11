@@ -142,6 +142,8 @@ int main(int argc, char* argv[]) {
     decodable.Reset();
   }
 
+  LOG("Total RTF %lf", total_decoding_time / total_wav_time);
+
   fclose(fin);
   fclose(fout);
 

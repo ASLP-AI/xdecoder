@@ -73,6 +73,7 @@ bool Vad::DoVad(const std::vector<float>& wave, bool end_of_stream,
       results_.push_back(smooth_result);
       if (smooth_result) contains_speech = true;
     }
+    (void)contains_speech;
   }
 
   audio_buffer_.insert(audio_buffer_.end(), wave.begin(), wave.end());

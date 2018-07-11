@@ -34,6 +34,8 @@ FasterDecoder::FasterDecoder(const Fst& fst,
   CHECK(config_.min_active >= 0 && config_.min_active < config_.max_active);
   // just so on the first frame we do something reasonable.
   toks_.SetSize(1000);
+  // token_pool_ = new NaiveObjectPool<Token>(1024);
+  token_pool_ = new CacheObjectPool<Token>(1024);
 }
 
 void FasterDecoder::InitDecoding() {
@@ -41,7 +43,9 @@ void FasterDecoder::InitDecoding() {
   ClearToks(toks_.Clear());
   int32_t start_state = fst_.Start();
   Arc dummy_arc(0, 0, 0.0f, start_state);
-  toks_.Insert(start_state, new Token(dummy_arc, NULL));
+  Token *token = token_pool_->New();
+  token->Init(dummy_arc, NULL);
+  toks_.Insert(start_state, token);
   ProcessNonemitting(std::numeric_limits<float>::max());
   num_frames_decoded_ = 0;
 }
@@ -49,6 +53,7 @@ void FasterDecoder::InitDecoding() {
 void FasterDecoder::Decode(Decodable* decodable) {
   InitDecoding();
   while (!decodable->IsLastFrame(num_frames_decoded_ - 1)) {
+    LOG("%s", token_pool_->Report().c_str());
     double weight_cutoff = ProcessEmitting(decodable);
     ProcessNonemitting(weight_cutoff);
   }
@@ -252,7 +257,8 @@ double FasterDecoder::ProcessEmitting(Decodable* decodable) {
           float ac_cost =  - decodable->LogLikelihood(frame, arc.ilabel);
           double new_weight = arc.weight + tok->cost_ + ac_cost;
           if (new_weight < next_weight_cutoff) {  // not pruned..
-            Token *new_tok = new Token(arc, ac_cost, tok);
+            Token *new_tok = token_pool_->New();
+            new_tok->Init(arc, ac_cost, tok);
             Elem *e_found = toks_.Find(arc.next_state);
             if (new_weight + adaptive_beam < next_weight_cutoff)
               next_weight_cutoff = new_weight + adaptive_beam;
@@ -260,10 +266,10 @@ double FasterDecoder::ProcessEmitting(Decodable* decodable) {
               toks_.Insert(arc.next_state, new_tok);
             } else {
               if ( *(e_found->val) < *new_tok ) {
-                Token::TokenDelete(e_found->val);
+                Token::TokenDelete(e_found->val, token_pool_);
                 e_found->val = new_tok;
               } else {
-                Token::TokenDelete(new_tok);
+                Token::TokenDelete(new_tok, token_pool_);
               }
             }
           }
@@ -271,7 +277,7 @@ double FasterDecoder::ProcessEmitting(Decodable* decodable) {
       }
     }
     e_tail = e->tail;
-    Token::TokenDelete(e->val);
+    Token::TokenDelete(e->val, token_pool_);
     toks_.Delete(e);
   }
   num_frames_decoded_++;
@@ -297,9 +303,11 @@ void FasterDecoder::ProcessNonemitting(double cutoff) {
         it != fst_.ArcEnd(state); it++) {
       const Arc &arc = *it;
       if (arc.ilabel == 0) {  // propagate nonemitting only...
-        Token *new_tok = new Token(arc, tok);
+        Token *new_tok = token_pool_->New();
+        new_tok->Init(arc, tok);
+
         if (new_tok->cost_ > cutoff) {  // prune
-          Token::TokenDelete(new_tok);
+          Token::TokenDelete(new_tok, token_pool_);
         } else {
           Elem *e_found = toks_.Find(arc.next_state);
           if (e_found == NULL) {
@@ -307,11 +315,11 @@ void FasterDecoder::ProcessNonemitting(double cutoff) {
             queue_.push_back(arc.next_state);
           } else {
             if ( *(e_found->val) < *new_tok ) {
-              Token::TokenDelete(e_found->val);
+              Token::TokenDelete(e_found->val, token_pool_);
               e_found->val = new_tok;
               queue_.push_back(arc.next_state);
             } else {
-              Token::TokenDelete(new_tok);
+              Token::TokenDelete(new_tok, token_pool_);
             }
           }
         }
@@ -322,7 +330,7 @@ void FasterDecoder::ProcessNonemitting(double cutoff) {
 
 void FasterDecoder::ClearToks(Elem *list) {
   for (Elem *e = list, *e_tail; e != NULL; e = e_tail) {
-    Token::TokenDelete(e->val);
+    Token::TokenDelete(e->val, token_pool_);
     e_tail = e->tail;
     toks_.Delete(e);
   }
