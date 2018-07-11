@@ -44,12 +44,12 @@ class NaiveObjectPool : public IObjectPool<Type> {
   explicit NaiveObjectPool(int init_size = 32): allocated_(0), deleted_(0) {}
   ~NaiveObjectPool() {}
 
-  virtual Type* New() {
+  virtual inline Type* New() {
     allocated_++;
     return new Type();
   }
 
-  virtual void Delete(Type* object) {
+  virtual inline void Delete(Type* object) {
     deleted_++;
     delete object;
   }
@@ -102,17 +102,17 @@ class CacheObjectPool : public IObjectPool<Type> {
       delete [] memory;
     }
 
-    Type* operator ()(int i) {
+    inline Type* operator ()(int i) {
       CHECK(i < capacity);
-      return new(memory + i) Type();
+      return memory + i;
     }
   };
 
  public:
-  virtual Type* New() {
+  virtual inline Type* New() {
     Type *object = NULL;
     if (latest_deleted_ != NULL) {
-      object = new(latest_deleted_) Type();
+      object = latest_deleted_;
       latest_deleted_ = *(reinterpret_cast<Type **>(latest_deleted_));
       free_--;
     } else {
@@ -122,6 +122,7 @@ class CacheObjectPool : public IObjectPool<Type> {
         if (size > kMaxBlockSize) size = kMaxBlockSize;
         Node* new_node = new Node(size);
         last_node_->next_node = new_node;
+        last_node_ = new_node;
         current_cursor_ = 0;
         allocated_ += size;
       }
@@ -131,7 +132,7 @@ class CacheObjectPool : public IObjectPool<Type> {
     return object;
   }
 
-  virtual void Delete(Type* object) {
+  virtual inline void Delete(Type* object) {
     object->~Type();
     *(reinterpret_cast<Type **>(object)) = latest_deleted_;
     latest_deleted_ = object;

@@ -53,7 +53,6 @@ void FasterDecoder::InitDecoding() {
 void FasterDecoder::Decode(Decodable* decodable) {
   InitDecoding();
   while (!decodable->IsLastFrame(num_frames_decoded_ - 1)) {
-    LOG("%s", token_pool_->Report().c_str());
     double weight_cutoff = ProcessEmitting(decodable);
     ProcessNonemitting(weight_cutoff);
   }
